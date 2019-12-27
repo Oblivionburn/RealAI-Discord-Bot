@@ -55,7 +55,7 @@ client.on('message', async message =>
         var botUser_PC = `<@!${client.user.id}>`;
         var botUser_Mobile = `<@${client.user.id}>`;
 
-        if ((!message.content.startsWith(botUser) && !message.content.startsWith(botUser_Mobile)) || 
+        if ((!message.content.startsWith(botUser_PC) && !message.content.startsWith(botUser_Mobile)) || 
             message.author.bot ||
             message.channel.name != 'realai-bot-test')
         {
