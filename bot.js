@@ -52,9 +52,10 @@ client.on('message', async message =>
     try
     {
         var taggedUser = message.mentions.users.first();
-        var botUser = `<@!${client.user.id}>`;
+        var botUser_PC = `<@!${client.user.id}>`;
+        var botUser_Mobile = `<@${client.user.id}>`;
 
-        if (!message.content.startsWith(botUser) || 
+        if ((!message.content.startsWith(botUser) && !message.content.startsWith(botUser_Mobile)) || 
             message.author.bot ||
             message.channel.name != 'realai-bot-test')
         {
