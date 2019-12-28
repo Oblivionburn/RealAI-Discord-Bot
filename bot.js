@@ -55,70 +55,100 @@ client.on('message', async message =>
         var botUser_PC = `<@!${client.user.id}>`;
         var botUser_Mobile = `<@${client.user.id}>`;
 
-        if ((!message.content.startsWith(botUser_PC) && !message.content.startsWith(botUser_Mobile)) || 
-            message.author.bot ||
-            message.channel.name != 'realai-bot-test')
-        {
-            return;
-        }
+        //Check if tagged the bot
+        if (!message.content.startsWith(botUser_PC) && !message.content.startsWith(botUser_Mobile)) { return; }
+
+        //Check if message is not coming from another bot
+        if (message.author.bot) { return; }
+
+        //Check for channel restriction
+        if (message.channel.name != 'realai-bot-test') { return; }
 
         console.log(message.content);
 
         if (taggedUser.id === client.user.id)
         {
             //Get message after bot's tag
-            var real_message = message.content.slice(botUser.length).trim();
-            var using_command = false;
-
-            //Check for it being a command
-            if (real_message.length > 1 &&
-               (real_message.startsWith(prefix) && !Util.SpecialCharacters().includes(real_message[1])))
+            var real_message = "";
+            if (message.content.startsWith(botUser_PC))
             {
-                //Get command name and args
-                var args = real_message.slice(prefix.length).trim().split(/ +/);
-                var commandName = args.shift();
+                real_message = message.content.slice(botUser_PC.length).trim();
+            }
+            else if (message.content.startsWith(botUser_Mobile))
+            {
+                real_message = message.content.slice(botUser_Mobile.length).trim();
+            }
+            
+            if (real_message)
+            {
+                var using_command = false;
 
-                //Get command using name or alias
-                var command = client.commands.get(commandName) || client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
-                if (command)
+                //Check for it being a command
+                if (real_message.length > 1 &&
+                   (real_message.startsWith(prefix) && !Util.SpecialCharacters().includes(real_message[1])))
                 {
-                    using_command = true;
-
-                    //Handle command cooldown
-                    if (!cooldowns.has(command.name)) 
+                    //Get command name and args
+                    var args = real_message.slice(prefix.length).trim().split(/ +/);
+                    var commandName = args.shift();
+    
+                    //Get command using name or alias
+                    var command = client.commands.get(commandName) || client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
+                    if (command)
                     {
-                        cooldowns.set(command.name, new Discord.Collection());
-                    }
-
-                    var now = Date.now();
-                    const timestamps = cooldowns.get(command.name);
-                    const cooldownAmount = command.cooldown * 1000;
-
-                    if (timestamps.has(message.author.id)) 
-                    {
-                        const expirationTime = timestamps.get(message.author.id) + cooldownAmount;
-
-                        if (now < expirationTime) 
+                        using_command = true;
+    
+                        //Handle command cooldown
+                        if (!cooldowns.has(command.name)) 
                         {
-                            const timeLeft = (expirationTime - now) / 1000;
-                            return message.reply(`please wait ${timeLeft.toFixed(1)} more second(s) before reusing the \`${command.name}\` command.`);
+                            cooldowns.set(command.name, new Discord.Collection());
                         }
-                    }
-
-                    timestamps.set(message.author.id, now);
-                    setTimeout(() => timestamps.delete(message.author.id), cooldownAmount);
-
-                    //Check for existing command
-                    if (client.commands.has(command.name))
-                    {
-                        //Restrict database commands
-                        if (commandName.includes('database') &&
-                            !commandName.includes('help'))
+    
+                        var now = Date.now();
+                        const timestamps = cooldowns.get(command.name);
+                        const cooldownAmount = command.cooldown * 1000;
+    
+                        if (timestamps.has(message.author.id)) 
                         {
-                            if (message.author.username === 'Oblivionburn')
+                            const expirationTime = timestamps.get(message.author.id) + cooldownAmount;
+    
+                            if (now < expirationTime) 
+                            {
+                                const timeLeft = (expirationTime - now) / 1000;
+                                return message.reply(`please wait ${timeLeft.toFixed(1)} more second(s) before reusing the \`${command.name}\` command.`);
+                            }
+                        }
+    
+                        timestamps.set(message.author.id, now);
+                        setTimeout(() => timestamps.delete(message.author.id), cooldownAmount);
+    
+                        //Check for existing command
+                        if (client.commands.has(command.name))
+                        {
+                            //Restrict database commands
+                            if (commandName.includes('database') &&
+                                !commandName.includes('help'))
+                            {
+                                if (message.author.username === 'Oblivionburn')
+                                {
+                                    try 
+                                    {
+                                        await command.execute(brain, message, args);
+                                    }
+                                    catch (error) 
+                                    {
+                                        console.error(error);
+                                    }
+                                }
+                                else
+                                {
+                                    message.channel.send(`You do not have permission to use that command.`);
+                                }
+                            }
+                            else 
                             {
                                 try 
                                 {
+                                    //Execute normal command
                                     await command.execute(brain, message, args);
                                 }
                                 catch (error) 
@@ -126,22 +156,10 @@ client.on('message', async message =>
                                     console.error(error);
                                 }
                             }
-                            else
-                            {
-                                message.channel.send(`You do not have permission to use that command.`);
-                            }
                         }
-                        else 
+                        else
                         {
-                            try 
-                            {
-                                //Execute normal command
-                                await command.execute(brain, message, args);
-                            }
-                            catch (error) 
-                            {
-                                console.error(error);
-                            }
+                            message.channel.send(`I'm sorry ${message.author.username}, I'm afraid I can't do that.`);
                         }
                     }
                     else
@@ -149,36 +167,32 @@ client.on('message', async message =>
                         message.channel.send(`I'm sorry ${message.author.username}, I'm afraid I can't do that.`);
                     }
                 }
-                else
+    
+                if (!using_command)
                 {
-                    message.channel.send(`I'm sorry ${message.author.username}, I'm afraid I can't do that.`);
-                }
-            }
-
-            if (!using_command)
-            {
-                //Add input/words/pre-words/pro-words to database
-                var words = await AddData(message, real_message);
-                if (words)
-                {
-                    //Format input to store as output and last response for the user
-                    var clean_message = Util.RulesCheck(message, real_message.trim());
-
-                    //Add outputs if there was a last_response stored for the user
-                    var last_response = await Brain_Users.get_User_LastResponse(brain.Users, message.author.id);
-                    if (last_response)
+                    //Add input/words/pre-words/pro-words to database
+                    var words = await AddData(message, real_message);
+                    if (words)
                     {
-                        await Brain_Outputs.add_Output(brain.Outputs, last_response, clean_message);
-                    }
-
-                    //Respond
-                    var response = await Respond(message, clean_message, words);
-                    if (response)
-                    {
-                        message.channel.send(response);
-
-                        //Update user with last response
-                        await Brain_Users.add_User(brain.Users, message.author.id, message.author.username, clean_message, response);
+                        //Format input to store as output and last response for the user
+                        var clean_message = Util.RulesCheck(message, real_message.trim());
+    
+                        //Add outputs if there was a last_response stored for the user
+                        var last_response = await Brain_Users.get_User_LastResponse(brain.Users, message.author.id);
+                        if (last_response)
+                        {
+                            await Brain_Outputs.add_Output(brain.Outputs, last_response, clean_message);
+                        }
+    
+                        //Respond
+                        var response = await Respond(message, clean_message, words);
+                        if (response)
+                        {
+                            message.channel.send(response);
+    
+                            //Update user with last response
+                            await Brain_Users.add_User(brain.Users, message.author.id, message.author.username, clean_message, response);
+                        }
                     }
                 }
             }
@@ -187,7 +201,6 @@ client.on('message', async message =>
     catch (error)
     {
         console.error(error);
-        message.reply(`Error: ${error}`);
     }
 });
 
