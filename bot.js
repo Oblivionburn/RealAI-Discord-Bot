@@ -61,9 +61,6 @@ client.on('message', async message =>
         //Check if message is not coming from another bot
         if (message.author.bot) { return; }
 
-        //Check for channel restriction
-        if (message.channel.name != 'realai-bot-test') { return; }
-
         console.log(message.content);
 
         if (taggedUser.id === client.user.id)
@@ -128,7 +125,7 @@ client.on('message', async message =>
                             if (commandName.includes('database') &&
                                 !commandName.includes('help'))
                             {
-                                if (message.author.username === 'Oblivionburn')
+                                if (message.member.highestRole.hasPermission('ADMINISTRATOR'))
                                 {
                                     try 
                                     {
