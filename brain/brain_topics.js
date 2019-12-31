@@ -40,10 +40,10 @@ module.exports =
     {
         var wordString = "";
 
-        var wordList = await table.findAll({ attributes: ['input', 'topic', 'frequency'] });
-        for (var i = 0; i < wordList.length; i++)
+        var results = await table.findAll({ attributes: ['input', 'topic', 'frequency'] });
+        for (var i = 0; i < results.length; i++)
         {
-            wordString += `"${wordList[i].input}" -> "${wordList[i].topic}": ${wordList[i].frequency}\n`;
+            wordString += `"${results[i].input}" -> "${results[i].topic}": ${results[i].frequency}\n`;
         }
 
         if (wordString.length > 0)
@@ -57,14 +57,14 @@ module.exports =
     },
     async get_Topics(table, message, existing_topic)
     {
-        var result = await table.findAll({ where: { topic: existing_topic } })
-        if (result != null &&
-            result != '')
+        var results = await table.findAll({ where: { topic: existing_topic } })
+        if (results != null &&
+            results != '')
         {
             var wordString = "";
-            for (var i = 0; i < wordList.length; i++)
+            for (var i = 0; i < results.length; i++)
             {
-                wordString += `"${wordList[i].input}" -> "${wordList[i].topic}": ${wordList[i].frequency}\n`;
+                wordString += `"${results[i].input}" -> "${results[i].topic}": ${results[i].frequency}\n`;
             }
 
             message.channel.send(`${wordString}`);
@@ -74,23 +74,23 @@ module.exports =
             message.channel.send(`Could not find topic "${existing_topic}" in the database.`);
         }
     },
-    async get_Topics_Matching(table, message, existing_input, existing_topic)
+    async get_Topics_Input(table, message, existing_input)
     {
-        var result = await table.findAll({ where: { input: existing_input, topic: existing_topic } })
-        if (result != null &&
-            result != '')
+        var results = await table.findAll({ where: { input: existing_input } })
+        if (results != null &&
+            results != '')
         {
             var wordString = "";
-            for (var i = 0; i < wordList.length; i++)
+            for (var i = 0; i < results.length; i++)
             {
-                wordString += `"${wordList[i].input}" -> "${wordList[i].topic}": ${wordList[i].frequency}\n`;
+                wordString += `"${results[i].input}" -> "${results[i].topic}": ${results[i].frequency}\n`;
             }
 
             message.channel.send(`${wordString}`);
         }
         else
         {
-            message.channel.send(`Could not find "${existing_topic}" as topic for "${existing_input}" in the database.`);
+            message.channel.send(`Could any topics for "${existing_input}" in the database.`);
         }
     },
     async get_Inputs_With_Topic(table, existing_topic)
