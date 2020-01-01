@@ -1,22 +1,40 @@
 {
-	"name": "RealAI",
-	"version": "1.0.0",
-	"description": "RealAI Discord Bot",
-	"main": "bot.js",
-	"author": "Oblivionburn",
-	"dependencies": {
-		"@discordjs/uws": "^10.149.0",
-		"bluebird": "^3.7.2",
-		"bufferutil": "^4.0.0",
-		"discord.io": "https://github.com/woor/discord.io/tarball/gateway_v6",
-		"discord.js": "^11.5.1",
-		"erlpack": "^0.1.3",
-		"libsodium-wrappers": "^0.7.3",
-		"node-opus": "^0.3.3",
-		"opusscript": "0.0.6",
-		"sequelize": "^5.21.3",
-		"sqlite3": "^4.1.1",
-		"uws": "^100.0.1",
-		"winston": "^3.2.1"
-	}
+  "name": "realai-discord-bot",
+  "version": "1.0.0",
+  "description": "RealAI version of Discord bot",
+  "main": "bot.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "dependencies": {
+    "@discordjs/uws": "^10.149.0",
+    "bufferutil": "^4.0.1",
+    "discord.js": "^11.5.1",
+    "erlpack": "^0.1.3",
+    "libsodium-wrappers": "^0.7.6",
+    "node-opus": "^0.3.3",
+    "opusscript": "0.0.6",
+    "sequelize": "^5.21.3",
+    "sqlite3": "^4.1.1",
+    "uws": "^100.0.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "!ping"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Oblivionburn/RealAI-Discord-Bot.git"
+  },
+  "keywords": [
+    "realai",
+    "discord",
+    "bot"
+  ],
+  "author": "Oblivionburn",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Oblivionburn/RealAI-Discord-Bot/issues"
+  },
+  "homepage": "https://github.com/Oblivionburn/RealAI-Discord-Bot#readme"
 }
