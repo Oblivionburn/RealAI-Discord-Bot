@@ -13,6 +13,7 @@ var Brain_ProWords = require('./brain/brain_pro_words.js');
 var Brain_Users = require('./brain/brain_users.js');
 var Brain_Topics = require('./brain/brain_topics.js');
 var Util = require('./brain/util.js');
+var Brain_Words_Blacklist = require('./brain/brain_words_blacklist.js');
 
 //Setup client
 var client = new Discord.Client();
@@ -212,6 +213,18 @@ async function AddData(message, real_message)
         if (!words[0])
         {
             words.shift();
+        }
+
+        //Remove any blacklisted words
+        for (var i = 0; i < words.length; i++)
+        {
+            var blacklisted = await Brain_Words_Blacklist.check_Word(brain.WordsBlackList, words[i]);
+            if (blacklisted)
+            {
+                words.splice(i, 1);
+                real_message = real_message.replace(words[i], "");
+                i--;
+            }
         }
 
         if (words.length > 0)

@@ -4,7 +4,7 @@ module.exports =
 {
     name: 'database_Delete_Words',
     description: 'Deletes the word or all words from the database.',
-    usage: '[Word or blank]',
+    usage: 'blank or [Word]',
     async execute(brain, message, args) 
     {
         if (args.length > 0)

@@ -35,6 +35,25 @@ module.exports =
         await table.destroy({ where: {} })
             .then(message.channel.send(`All pre-words have been removed from the database.`));
     },
+    async remove_Blacklisted(table, existing_word)
+    {
+        var results = await table.findAll({ attributes: ['word', 'pre_word'] });
+        if (results != null &&
+            results != '')
+        {
+            for (var i = 0; i < results.length; i++)
+            {
+                if (results[i].word == existing_word)
+                {
+                    await table.destroy({ where: { word: results[i].word } })
+                }
+                else if (results[i].pre_word == existing_word)
+                {
+                    await table.destroy({ where: { pre_word: results[i].pre_word } })
+                }
+            }
+        }
+    },
     async get_Pre_Words_All(table, message)
     {
         try

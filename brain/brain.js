@@ -6,7 +6,7 @@ class Brain
     {
         this.Database = new Sequelize('database', 'user', 'password', 
         {
-            host: 'localhost',
+            host: '0.0.0.0',
             dialect: 'sqlite',
             logging: false,
             storage: 'database.sqlite',
@@ -151,6 +151,15 @@ class Brain
                 allowNull: false
             }
         });
+
+        this.WordsBlackList = this.Database.define('words_blacklist', 
+        {
+            word:
+            { 
+                type: Sequelize.STRING,
+                allowNull: false,
+            }
+        });
     }
 
     init_Brain()
@@ -162,6 +171,7 @@ class Brain
         this.Topics.sync();
         this.Outputs.sync();
         this.Users.sync();
+        this.WordsBlackList.sync();
     }
 
     async wipe(message)
@@ -173,6 +183,7 @@ class Brain
             .then(this.Users.destroy({ where: {} }))
             .then(this.Topics.destroy({ where: {} }))
             .then(this.Outputs.destroy({ where: {} }))
+            .then(this.WordsBlackList.destroy({ where: {} }))
             .then(message.channel.send(`Everything has been removed from the database.`));
     }
 }

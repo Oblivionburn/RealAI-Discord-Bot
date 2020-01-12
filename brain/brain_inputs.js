@@ -32,15 +32,30 @@ module.exports =
         await table.destroy({ where: {} })
             .then(message.channel.send(`All inputs have been removed from the database.`));
     },
+    async remove_Blacklisted(table, existing_word)
+    {
+        var results = await table.findAll({ attributes: ['input'] });
+        if (results != null &&
+            results != '')
+        {
+            for (var i = 0; i < results.length; i++)
+            {
+                if (results[i].input.includes(existing_word))
+                {
+                    await table.destroy({ where: { input: results[i].input } })
+                }
+            }
+        }
+    },
     async get_Input(table, message, existing_input)
     {
-        var result = await table.findAll({ where: { input: existing_input } });
-        if (result != null &&
-            result != '')
+        var results = await table.findAll({ where: { input: existing_input } });
+        if (results != null &&
+            results != '')
         {
-            for (var i = 0; i < result.length; i++)
+            for (var i = 0; i < results.length; i++)
             {
-                message.channel.send(`"${result[i].input}": ${result[i].frequency}`);
+                message.channel.send(`"${results[i].input}": ${results[i].frequency}`);
             }
 
             message.channel.send(`(end transmission)`);
@@ -52,14 +67,14 @@ module.exports =
     },
     async get_Inputs(table, message)
     {
-        var result = await table.findAll({ attributes: ['input', 'frequency'] });
-        if (result != null &&
-            result != '')
+        var results = await table.findAll({ attributes: ['input', 'frequency'] });
+        if (results != null &&
+            results != '')
         {
             var inputString = "";
-            for (var i = 0; i < result.length; i++)
+            for (var i = 0; i < results.length; i++)
             {
-                message.channel.send(`"${result[i].input}": ${result[i].frequency}`);
+                message.channel.send(`"${results[i].input}": ${results[i].frequency}`);
             }
 
             message.channel.send(`(end transmission)`);

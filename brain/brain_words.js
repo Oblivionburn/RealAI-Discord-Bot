@@ -1,5 +1,3 @@
-var Util = require('./util.js');
-
 module.exports = 
 {
     async add_Words(table, new_words)
@@ -36,6 +34,21 @@ module.exports =
     {
         await table.destroy({ where: {} })
             .then(message.channel.send(`All words have been removed from the database.`));
+    },
+    async remove_Blacklisted(table, existing_word)
+    {
+        var results = await table.findAll({ attributes: ['word'] });
+        if (results != null &&
+            results != '')
+        {
+            for (var i = 0; i < results.length; i++)
+            {
+                if (results[i].word == existing_word)
+                {
+                    await table.destroy({ where: { word: results[i].word } })
+                }
+            }
+        }
     },
     async get_Word(table, message, existing_word)
     {

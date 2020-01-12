@@ -68,8 +68,7 @@ module.exports =
                 //Set ending punctuation
                 var ending_punctuation = ['.', '!', '?'];
                 var last_letter = new_string[new_string.length - 1];
-                if (!ending_punctuation.includes(last_letter) &&
-                    !this.SpecialCharacters().includes(new_string[i]))
+                if (!this.SpecialCharacters().includes(last_letter))
                 {
                     new_string += ".";
                 }

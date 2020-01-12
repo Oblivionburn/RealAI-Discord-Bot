@@ -32,6 +32,25 @@ module.exports =
         await table.destroy({ where: {} })
             .then(message.channel.send(`All outputs have been removed from the database.`));
     },
+    async remove_Blacklisted(table, existing_word)
+    {
+        var results = await table.findAll({ attributes: ['input', 'output'] });
+        if (results != null &&
+            results != '')
+        {
+            for (var i = 0; i < results.length; i++)
+            {
+                if (results[i].input.includes(existing_word))
+                {
+                    await table.destroy({ where: { input: results[i].input } })
+                }
+                else if (results[i].output.includes(existing_word))
+                {
+                    await table.destroy({ where: { output: results[i].output } })
+                }
+            }
+        }
+    },
     async get_Outputs(table, message, existing_input)
     {
         var result = await table.findAll({ where: { input: existing_input } });

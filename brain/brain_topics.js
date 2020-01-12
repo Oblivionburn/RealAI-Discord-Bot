@@ -36,6 +36,25 @@ module.exports =
         await table.destroy({ where: {} })
             .then(message.channel.send(`All topics have been removed from the database.`));
     },
+    async remove_Blacklisted(table, existing_word)
+    {
+        var results = await table.findAll({ attributes: ['input', 'topic'] });
+        if (results != null &&
+            results != '')
+        {
+            for (var i = 0; i < results.length; i++)
+            {
+                if (results[i].topic == existing_word)
+                {
+                    await table.destroy({ where: { topic: results[i].topic } })
+                }
+                else if (results[i].input.includes(existing_word))
+                {
+                    await table.destroy({ where: { input: results[i].input } })
+                }
+            }
+        }
+    },
     async get_Topics_All(table, message)
     {
         var wordString = "";
