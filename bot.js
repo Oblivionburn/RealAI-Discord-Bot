@@ -53,6 +53,8 @@ client.on('message', async message =>
     try
     {
         var users = message.mentions.users;
+        var roles = message.mentions.roles;
+
         var taggedUser = users.first();
         var botUser_PC = `<@!${client.user.id}>`;
         var botUser_Mobile = `<@${client.user.id}>`;
@@ -78,7 +80,7 @@ client.on('message', async message =>
                 real_message = message.content.slice(botUser_Mobile.length).trim();
             }
             
-            //Strip out other mentions to prevent the bot from pinging people
+            //Strip out mentions of users
             if (users.size > 1)
             {
                 for (var [string, User] of users)
@@ -97,6 +99,27 @@ client.on('message', async message =>
                         {
                             real_message = real_message.replace(user_mobile, "");
                         }
+                    }
+                }
+            }
+
+            //Strip out mentions of roles
+            if (roles.size > 0)
+            {
+                for (var [string, Role] of roles)
+                {
+                    var id = Role.id;
+
+                    var role_pc = "<@&" + id + ">";
+                    while (real_message.includes(role_pc))
+                    {
+                        real_message = real_message.replace(role_pc, "");
+                    }
+
+                    var role_mobile = "<@" + id + ">";
+                    while (real_message.includes(role_mobile))
+                    {
+                        real_message = real_message.replace(role_mobile, "");
                     }
                 }
             }
