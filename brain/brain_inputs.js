@@ -1,3 +1,5 @@
+var Util = require('./util.js');
+
 module.exports = 
 {
     async add_Input(table, new_input)
@@ -94,6 +96,83 @@ module.exports =
         }
         
         return 0;
+    },
+    async get_InputsWithFirstWord_ForCommand(table, message, word)
+    {
+        try
+        {
+            var results = await table.findAll({ attributes: ['input'] });
+            if (results != null &&
+                results != '')
+            {
+                var inputs = [];
+                for (var i = 0; i < results.length; i++)
+                {
+                    var input = results[i].input;
+                    var words = Util.GapSpecials(input).split(/ +/);
+                    if (words.length > 0)
+                    {
+                        var first_word = words[0];
+                        if (first_word == word)
+                        {
+                            inputs.push(input);
+                        }
+                    }
+                }
+
+                if (inputs.length > 0)
+                {
+                    for (var i = 0; i < inputs.length; i++)
+                    {
+                        message.channel.send(`"${inputs[i]}"`);
+                    }
+                }
+                else
+                {
+                    message.channel.send(`Could not find any inputs starting with "${word}" in the database.`);
+                }
+            }
+        }
+        catch (error)
+        {
+            message.channel.send(`Error: ${error}`);
+        }
+    },
+    async get_InputsWithFirstWord(table, message, word)
+    {
+        try
+        {
+            var results = await table.findAll({ attributes: ['input'] });
+            if (results != null &&
+                results != '')
+            {
+                var inputs = [];
+                for (var i = 0; i < results.length; i++)
+                {
+                    var input = results[i].input;
+                    var words = Util.GapSpecials(input).split(/ +/);
+                    if (words.length > 0)
+                    {
+                        var first_word = words[0];
+                        if (first_word == word)
+                        {
+                            inputs.push(input);
+                        }
+                    }
+                }
+
+                if (inputs.length > 0)
+                {
+                    return inputs;
+                }
+            }
+        }
+        catch (error)
+        {
+            message.channel.send(`Error: ${error}`);
+        }
+
+        return null;
     },
     async decrease_InputCount(table, message, existing_input)
     {

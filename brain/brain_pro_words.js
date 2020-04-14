@@ -81,13 +81,13 @@ module.exports =
     },
     async get_Pro_Words(table, message, existing_pro_word)
     {
-        var result = await table.findAll({ where: { pro_word: existing_pro_word } });
+        var result = await table.findAll({ where: { word: existing_pro_word } });
         if (result != null &&
             result != '')
         {
             for (var i = 0; i < result.length; i++)
             {
-                message.channel.send(`"${result[i].pro_word}" <- "${result[i].word}": ${result[i].frequency}`);
+                message.channel.send(`"${result[i].word}" -> "${result[i].pro_word}": ${result[i].frequency}`);
             }
 
             message.channel.send(`(end transmission)`);

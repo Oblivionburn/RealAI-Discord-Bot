@@ -385,27 +385,53 @@ async function Respond(message, input, words)
                 }
             }
 
+            var response = "";
+
             if (output_pool.length > 0)
             {
                 //Pick topic based output at random
                 var random = Math.floor(Math.random() * output_pool.length);
-                var response = output_pool[random];
-                return output_pool[random];
+                response = output_pool[random];
             }
 
             //Get direct outputs for the input
-            var response = await Brain_Outputs.get_Outputs_Max(brain.Outputs, input);
-            if (response)
+            if (!response)
             {
-                return response;
+                var direct_output = await Brain_Outputs.get_Outputs_Max(brain.Outputs, input);
+                if (direct_output)
+                {
+                    response = direct_output;
+                }
+            }
+            
+            //Generate a new response
+            if (!response)
+            {
+                var generated = await GenerateResponse(message, topic);
+                if (generated)
+                {
+                    response = generated;
+                }
             }
 
-            //Generate a new response
-            var response = await GenerateResponse(message, topic);
             if (response)
             {
-                return response;
+                var new_ending = await Util.LearnEndingPunctuation(Brain_Inputs, brain.Inputs, message, response);
+                if (new_ending)
+                {
+                    //Remove all special characters at the end
+                    var specials = Util.SpecialCharacters();
+                    while (specials.includes(response[response.length - 1]))
+                    {
+                        response = response.substring(0, response.length - 1);
+                    }
+
+                    //Add learned ending puncutation
+                    response += new_ending;
+                }
             }
+            
+            return response;
         }
     }
     catch (error)

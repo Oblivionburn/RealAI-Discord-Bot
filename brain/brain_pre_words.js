@@ -81,7 +81,7 @@ module.exports =
     },
     async get_Pre_Words(table, message, existing_pre_word)
     {
-        var result = await table.findAll({ where: { pre_word: existing_pre_word } });
+        var result = await table.findAll({ where: { word: existing_pre_word } });
         if (result != null &&
             result != '')
         {
