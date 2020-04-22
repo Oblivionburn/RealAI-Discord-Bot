@@ -233,7 +233,7 @@ client.on('message', async message =>
                         var response = await Respond(message, clean_message, words);
                         if (response)
                         {
-                            message.channel.send(response);
+                            message.channel.send(response, {tts: message.tts});
     
                             //Update user with last response
                             await Brain_Users.add_User(brain.Users, message.author.id, message.author.username, clean_message, response);
@@ -319,6 +319,11 @@ async function AddPreWords(message, word_array)
             pre_words.length > 0)
         {
             await Brain_PreWords.add_Pre_Words(brain.PreWords, words, pre_words, debug);
+
+            for (var i = 0; i < words.length; i++)
+            {
+                await Brain_PreWords.discourage_PreWords(brain.Words, brain.PreWords, words[i], pre_words[i]);
+            }
         }
     }
     catch (error)
@@ -348,6 +353,11 @@ async function AddProWords(message, word_array)
             pro_words.length > 0)
         {
             await Brain_ProWords.add_Pro_Words(brain.ProWords, words, pro_words, debug);
+
+            for (var i = 0; i < words.length; i++)
+            {
+                await Brain_ProWords.discourage_ProWords(brain.Words, brain.ProWords, words[i], pro_words[i]);
+            }
         }
     }
     catch (error)

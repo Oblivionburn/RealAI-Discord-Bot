@@ -1,3 +1,5 @@
+var Sequelize = require('sequelize');
+
 module.exports = 
 {
     async add_Pre_Words(table, existing_words, new_words, debug)
@@ -21,6 +23,43 @@ module.exports =
             }
         }
         catch (error) 
+        {
+            console.error(error);
+        }
+    },
+    async discourage_PreWords(table_words, table_prewords, existing_word, pre_word)
+    {
+        try
+        {
+            var preword_results = await table_prewords.findAll({ where: { word: existing_word } })
+            if (preword_results)
+            {
+                for (var i = 0; i < preword_results.length; i++)
+                {
+                    var existing_pre_word = preword_results[i].pre_word;
+                    if (existing_pre_word != pre_word)
+                    {
+                        var words_result = await table_words.findOne({ where: { word: existing_pre_word } });
+                        if (words_result)
+                        {
+                            if (words_result.frequency < 3)
+                            {
+                                preword_results[i].frequency = preword_results[i].frequency - 1;
+                                if (preword_results[i].frequency == 0)
+                                {
+                                    await table_prewords.destroy({ where: { word: existing_word, pre_word: existing_pre_word } });
+                                }
+                                else
+                                {
+                                    await table_prewords.update({ frequency: Sequelize.literal('frequency - 1') }, { where: { word: existing_word, pre_word: existing_pre_word } });
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        catch (error)
         {
             console.error(error);
         }

@@ -25,6 +25,43 @@ module.exports =
             console.error(error);
         }
     },
+    async discourage_ProWords(table_words, table_prowords, existing_word, pro_word)
+    {
+        try
+        {
+            var proword_results = await table_prowords.findAll({ where: { word: existing_word } })
+            if (proword_results)
+            {
+                for (var i = 0; i < proword_results.length; i++)
+                {
+                    var existing_pro_word = proword_results[i].pro_word;
+                    if (existing_pro_word != pro_word)
+                    {
+                        var words_result = await table_words.findOne({ where: { word: existing_pro_word } });
+                        if (words_result)
+                        {
+                            if (words_result.frequency < 3)
+                            {
+                                proword_results[i].frequency = proword_results[i].frequency - 1;
+                                if (proword_results[i].frequency == 0)
+                                {
+                                    await table_prowords.destroy({ where: { word: existing_word, pro_word: existing_pro_word } });
+                                }
+                                else
+                                {
+                                    await table_prowords.update({ frequency: Sequelize.literal('frequency - 1') }, { where: { word: existing_word, pro_word: existing_pro_word } });
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        catch (error)
+        {
+            console.error(error);
+        }
+    },
     async remove_Pro_Word(table, message, existing_word, existing_pro_word)
     {
         await table.destroy({ where: { word: existing_word, pro_word: existing_pro_word } })

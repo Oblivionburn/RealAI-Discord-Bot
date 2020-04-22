@@ -127,7 +127,7 @@ class Brain
             frequency:
             {
                 type: Sequelize.INTEGER,
-                defaultValue: 1,
+                defaultValue: 30,
                 allowNull: false
             }
         });
@@ -147,7 +147,7 @@ class Brain
             frequency:
             {
                 type: Sequelize.INTEGER,
-                defaultValue: 1,
+                defaultValue: 30,
                 allowNull: false
             }
         });
