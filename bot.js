@@ -302,23 +302,29 @@ async function AddPreWords(message, word_array)
 {
     var words = [];
     var pre_words = [];
+    var distances = [];
 
     try
     {
         for (var i = 1; i < word_array.length; i++)
         {
-            if (word_array[i] &&
-                word_array[i - 1])
+            var count = 1;
+            for (var j = i - 1; j >= 0; j--)
             {
-                words.push(word_array[i]);
-                pre_words.push(word_array[i - 1]);
+                if (word_array[i] &&
+                    word_array[j])
+                {
+                    words.push(word_array[i]);
+                    pre_words.push(word_array[j]);
+                    distances.push(count);
+                    count++;
+                }
             }
         }
     
-        if (words.length > 0 &&
-            pre_words.length > 0)
+        if (words)
         {
-            await Brain_PreWords.add_Pre_Words(brain.PreWords, words, pre_words, debug);
+            await Brain_PreWords.add_Pre_Words(message, brain.PreWords, words, pre_words, distances);
 
             for (var i = 0; i < words.length; i++)
             {
@@ -336,23 +342,29 @@ async function AddProWords(message, word_array)
 {
     var words = [];
     var pro_words = [];
+    var distances = [];
 
     try
     {
         for (var i = 0; i < word_array.length - 1; i++)
         {
-            if (word_array[i] &&
-                word_array[i + 1])
+            var count = 1;
+            for (var j = i + 1; j <= word_array.length - 1; j++)
             {
-                words.push(word_array[i]);
-                pro_words.push(word_array[i + 1]);
+                if (word_array[i] &&
+                    word_array[j])
+                {
+                    words.push(word_array[i]);
+                    pro_words.push(word_array[j]);
+                    distances.push(count);
+                    count++;
+                }
             }
         }
     
-        if (words.length > 0 &&
-            pro_words.length > 0)
+        if (words)
         {
-            await Brain_ProWords.add_Pro_Words(brain.ProWords, words, pro_words, debug);
+            await Brain_ProWords.add_Pro_Words(message, brain.ProWords, words, pro_words, distances);
 
             for (var i = 0; i < words.length; i++)
             {
@@ -426,12 +438,14 @@ async function Respond(message, input, words)
 
             if (response)
             {
+                var current_ending = response[response.length - 1];
                 var new_ending = await Util.LearnEndingPunctuation(Brain_Inputs, brain.Inputs, message, response);
-                if (new_ending)
+                if (new_ending &&
+                    new_ending != current_ending)
                 {
                     //Remove all special characters at the end
                     var specials = Util.SpecialCharacters();
-                    while (specials.includes(response[response.length - 1]))
+                    if (specials.includes(response[response.length - 1]))
                     {
                         response = response.substring(0, response.length - 1);
                     }
@@ -457,44 +471,59 @@ async function GenerateResponse(message, topic)
     var words_found = true;
     var current_pre_word = topic;
     var current_pro_word = topic;
-    var ending_punctuation = ['.', '!', '?'];
     var response_words = [];
     var response = "";
 
     try
     {
         response_words.push(topic);
+
         while (words_found)
         {
-            current_pre_word = await Brain_PreWords.get_Pre_Words_Max(brain.PreWords, current_pre_word);
+            current_pre_word = await Brain_PreWords.get_Pre_Words_Max(message, brain.PreWords, response_words, current_pre_word);
             if (current_pre_word)
             {
-                for (var i = 0; i < response_words.length; i++)
-                {
-                    if ((response_words[i] === current_pre_word &&
-                        !Util.SpecialCharacters().includes(current_pre_word)) ||
-                        (i >= 1 &&
-                         response_words[i] === current_pre_word &&
-                         response_words[i] === response_words[i - 1]))
-                    {
-                        response_words.unshift(current_pre_word);
-                        words_found = false;
-                        break;
-                    }
-                }
-
                 if (words_found)
                 {
                     response_words.unshift(current_pre_word);
                 }
 
-                if (!Util.SpecialCharacters().includes(current_pre_word))
+                //Check for repeating chunk of response
+                var dup_found = false;
+                if (response_words.length >= 4)
                 {
-                    var first_letter = current_pre_word[0];
-                    if (first_letter === first_letter.toUpperCase())
+                    for (var length = 4; length <= response_words.length; length += 2)
                     {
-                        break;
+                        var count = Math.floor(length / 2);
+
+                        for (var i = 0; i <= response_words.length - length; i++)
+                        {
+                            var first_chunk = "";
+                            var second_chunk = "";
+
+                            for (var c = i; c < count + i; c++)
+                            {
+                                first_chunk += response_words[c];
+                                second_chunk += response_words[count + c];
+                            }
+
+                            if (first_chunk == second_chunk)
+                            {
+                                dup_found = true;
+                                break;
+                            }
+                        }
+
+                        if (dup_found)
+                        {
+                            break;
+                        }
                     }
+                }
+
+                if (dup_found)
+                {
+                    break;
                 }
             }
             else
@@ -506,39 +535,53 @@ async function GenerateResponse(message, topic)
         words_found = true;
         while (words_found)
         {
-            current_pro_word = await Brain_ProWords.get_Pro_Words_Max(brain.ProWords, current_pro_word);
+            current_pro_word = await Brain_ProWords.get_Pro_Words_Max(message, brain.ProWords, response_words, current_pro_word);
             if (current_pro_word)
             {
-                for (var i = 0; i < response_words.length; i++)
-                {
-                    if (response_words[i] === current_pro_word &&
-                        !Util.SpecialCharacters().includes(current_pre_word))
-                    {
-                        response_words.push(current_pro_word);
-                        words_found = false;
-                        break;
-                    }
-                    else if (response_words[i] === current_pro_word &&
-                             Util.SpecialCharacters().includes(current_pre_word))
-                    {
-                        words_found = false;
-                        break;
-                    }
-                }
-
-                if ((ending_punctuation.includes(current_pro_word) &&
-                    response_words[response_words.length - 1] === current_pro_word) ||
-                    Util.SpecialCharacters().includes(current_pre_word))
-                {
-                    break;
-                }
-
                 if (words_found)
                 {
                     response_words.push(current_pro_word);
                 }
 
-                if (ending_punctuation.includes(current_pro_word))
+                if (Util.SpecialCharacters().includes(current_pro_word))
+                {
+                    break;
+                }
+
+                //Check for repeating chunk of response
+                var dup_found = false;
+                if (response_words.length >= 4)
+                {
+                    for (var length = 4; length <= response_words.length; length += 2)
+                    {
+                        var count = Math.floor(length / 2);
+
+                        for (var i = 0; i <= response_words.length - length; i++)
+                        {
+                            var first_chunk = "";
+                            var second_chunk = "";
+
+                            for (var c = i; c < count + i; c++)
+                            {
+                                first_chunk += response_words[c];
+                                second_chunk += response_words[count + c];
+                            }
+
+                            if (first_chunk == second_chunk)
+                            {
+                                dup_found = true;
+                                break;
+                            }
+                        }
+
+                        if (dup_found)
+                        {
+                            break;
+                        }
+                    }
+                }
+
+                if (dup_found)
                 {
                     break;
                 }
