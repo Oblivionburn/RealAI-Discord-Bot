@@ -52,9 +52,9 @@ module.exports =
                 for (var i = 1; i < new_string.length; i++)
                 {
                     if (this.SpecialCharacters().includes(new_string[i]) &&
-                        new_string[i - 1] === ' ')
+                        new_string[i - 1] == ' ')
                     {
-                        new_string = new_string.substring(0, i - 1) + new_string.substring(i);
+                        new_string = new_string.substring(0, i - 1) + new_string[i];
                     }
                 }
 
@@ -62,7 +62,7 @@ module.exports =
                 var ending_exclusion = ['~', '@', '#', '$', '^', '&', '(', '=', '[', '{', ';', '<', '/', '|', '\\', ','];
                 while (ending_exclusion.includes(new_string[new_string.length - 1]))
                 {
-                    new_string = new_string.substring(0, new_string.length - 2);
+                    new_string = new_string.substring(0, new_string.length - 1);
                 }
 
                 //Set ending punctuation

@@ -490,6 +490,9 @@ async function GenerateResponse(message, topic)
 
                 //Check for repeating chunk of response
                 var dup_found = false;
+                var dup_startIndex = 0;
+                var dup_wordCount = 0;
+
                 if (response_words.length >= 4)
                 {
                     for (var length = 4; length <= response_words.length; length += 2)
@@ -510,6 +513,8 @@ async function GenerateResponse(message, topic)
                             if (first_chunk == second_chunk)
                             {
                                 dup_found = true;
+                                dup_startIndex = i;
+                                dup_wordCount = count;
                                 break;
                             }
                         }
@@ -523,6 +528,7 @@ async function GenerateResponse(message, topic)
 
                 if (dup_found)
                 {
+                    response_words.splice(dup_startIndex, dup_wordCount);
                     break;
                 }
             }
@@ -550,6 +556,9 @@ async function GenerateResponse(message, topic)
 
                 //Check for repeating chunk of response
                 var dup_found = false;
+                var dup_startIndex = 0;
+                var dup_wordCount = 0;
+
                 if (response_words.length >= 4)
                 {
                     for (var length = 4; length <= response_words.length; length += 2)
@@ -570,6 +579,8 @@ async function GenerateResponse(message, topic)
                             if (first_chunk == second_chunk)
                             {
                                 dup_found = true;
+                                dup_startIndex = i;
+                                dup_wordCount = count;
                                 break;
                             }
                         }
@@ -583,6 +594,7 @@ async function GenerateResponse(message, topic)
 
                 if (dup_found)
                 {
+                    response_words.splice(dup_startIndex, dup_wordCount);
                     break;
                 }
             }
