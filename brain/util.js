@@ -54,7 +54,7 @@ module.exports =
                     if (this.SpecialCharacters().includes(new_string[i]) &&
                         new_string[i - 1] == ' ')
                     {
-                        new_string = new_string.substring(0, i - 1) + new_string[i];
+                        new_string = new_string.substring(0, i - 1) + new_string.substring(i);
                     }
                 }
 
