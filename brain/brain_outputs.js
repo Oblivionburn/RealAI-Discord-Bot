@@ -53,17 +53,15 @@ module.exports =
     },
     async get_Outputs(table, message, existing_input)
     {
-        var result = await table.findAll({ where: { input: existing_input } });
-        if (result != null &&
-            result != '')
+        var results = await table.findAll({ where: { input: existing_input } });
+        if (results)
         {
-            var outputString = "";
-            for (var i = 0; i < result.length; i++)
+            for (var i = 0; i < results.length; i++)
             {
-                outputString += `"${result.input}" -> "${result.output}": ${result.frequency}\n`;
+                message.channel.send(`Input: "${results[i].input}" -> Output: ${results[i].output}, Frequency: ${results[i].frequency}`);
             }
 
-            message.channel.send(`${outputString}`);
+            message.channel.send(`(end transmission)`);
         }
         else
         {
@@ -72,17 +70,15 @@ module.exports =
     },
     async get_Outputs_All(table, message)
     {
-        var result = await table.findAll({ attributes: ['input', 'output', 'frequency'] });
-        if (result != null &&
-            result != '')
+        var results = await table.findAll({ attributes: ['input', 'output', 'frequency'] });
+        if (results)
         {
-            var outputString = "";
-            for (var i = 0; i < result.length; i++)
+            for (var i = 0; i < results.length; i++)
             {
-                outputString += `"${result[i].input}" -> "${result[i].output}": ${result[i].frequency}\n`;
+                message.channel.send(`Input: "${results[i].input}" -> Output: ${results[i].output}, Frequency: ${results[i].frequency}`);
             }
 
-            message.channel.send(`${outputString}`);
+            message.channel.send(`(end transmission)`);
         }
         else
         {

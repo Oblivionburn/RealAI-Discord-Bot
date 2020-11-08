@@ -9,7 +9,7 @@
   "dependencies": {
     "@discordjs/uws": "^10.149.0",
     "bufferutil": "^4.0.1",
-    "discord.js": "^11.5.1",
+    "discord.js": "^11.6.4",
     "erlpack": "^0.1.3",
     "libsodium-wrappers": "^0.7.6",
     "node-opus": "^0.3.3",

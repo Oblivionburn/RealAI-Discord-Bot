@@ -14,14 +14,19 @@ module.exports =
     },
     SpecialCharacters()
     {
-        return ['~', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '=', '+', '[', ']', '{', '}', ';', ':', '<', '>', '?', '/', '|', '\\', ',', '.'];
+        return [",", "'"];
+    },
+    EndingPunctuation()
+    {
+        return ['!', '?', '.'];
     },
     GapSpecials(original_string)
     {
         var new_string = "";
         for (var i = 0; i < original_string.length; i++)
         {
-            if (this.SpecialCharacters().includes(original_string[i]))
+            if (this.SpecialCharacters().includes(original_string[i]) ||
+                this.EndingPunctuation().includes(original_string[i]))
             {
                 new_string += " " + original_string[i];
             }
@@ -30,6 +35,12 @@ module.exports =
                 new_string += original_string[i];
             }
         }
+
+        return new_string;
+    },
+    RemoveSpecials(original_string)
+    {
+        var new_string = original_string.replace(/[^\w\s\!\.\?\,\']/gi, '');
 
         return new_string;
     },
@@ -51,6 +62,15 @@ module.exports =
                 //Remove spaces before special characters
                 for (var i = 1; i < new_string.length; i++)
                 {
+                    if (this.EndingPunctuation().includes(new_string[i]) &&
+                        new_string[i - 1] == ' ')
+                    {
+                        new_string = new_string.substring(0, i - 1) + new_string.substring(i);
+                    }
+                }
+
+                for (var i = 1; i < new_string.length; i++)
+                {
                     if (this.SpecialCharacters().includes(new_string[i]) &&
                         new_string[i - 1] == ' ')
                     {
@@ -59,15 +79,14 @@ module.exports =
                 }
 
                 //Remove special characters at the end that aren't ending punctuation
-                var ending_exclusion = ['~', '@', '#', '$', '^', '&', '(', '=', '[', '{', ';', '<', '/', '|', '\\', ','];
-                while (ending_exclusion.includes(new_string[new_string.length - 1]))
+                while (this.SpecialCharacters().includes(new_string[new_string.length - 1]))
                 {
                     new_string = new_string.substring(0, new_string.length - 1);
                 }
 
                 //Set ending punctuation
                 var last_letter = new_string[new_string.length - 1];
-                if (!this.SpecialCharacters().includes(last_letter))
+                if (!this.EndingPunctuation().includes(last_letter))
                 {
                     new_string += ".";
                 }

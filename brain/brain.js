@@ -117,17 +117,23 @@ class Brain
             word:
             { 
                 type: Sequelize.STRING,
-                allowNull: false,
+                allowNull: false
             },
             pre_word:
             { 
                 type: Sequelize.STRING,
-                allowNull: false,
+                allowNull: false
             },
             frequency:
             {
                 type: Sequelize.INTEGER,
                 defaultValue: 30,
+                allowNull: false
+            },
+            distance:
+            {
+                type: Sequelize.INTEGER,
+                defaultValue: 0,
                 allowNull: false
             }
         });
@@ -137,17 +143,23 @@ class Brain
             word:
             { 
                 type: Sequelize.STRING,
-                allowNull: false,
+                allowNull: false
             },
             pro_word:
             { 
                 type: Sequelize.STRING,
-                allowNull: false,
+                allowNull: false
             },
             frequency:
             {
                 type: Sequelize.INTEGER,
                 defaultValue: 30,
+                allowNull: false
+            },
+            distance:
+            {
+                type: Sequelize.INTEGER,
+                defaultValue: 0,
                 allowNull: false
             }
         });

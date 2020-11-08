@@ -57,7 +57,7 @@ module.exports =
         {
             for (var i = 0; i < results.length; i++)
             {
-                message.channel.send(`"${results[i].input}": ${results[i].frequency}`);
+                message.channel.send(`Input: "${results[i].input}", Frequency: ${results[i].frequency}`);
             }
 
             message.channel.send(`(end transmission)`);
@@ -76,7 +76,7 @@ module.exports =
             var inputString = "";
             for (var i = 0; i < results.length; i++)
             {
-                message.channel.send(`"${results[i].input}": ${results[i].frequency}`);
+                message.channel.send(`Input: "${results[i].input}", Frequency: ${results[i].frequency}`);
             }
 
             message.channel.send(`(end transmission)`);

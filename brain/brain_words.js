@@ -58,8 +58,10 @@ module.exports =
         {
             for (var i = 0; i < results.length; i++)
             {
-                message.channel.send(`"${results[i].word}": ${results[i].frequency}\n`);
+                message.channel.send(`Word: "${results[i].word}", Frequency: ${results[i].frequency}\n`);
             }
+
+            message.channel.send(`(end transmission)`);
         }
         else
         {
@@ -73,8 +75,10 @@ module.exports =
         {
             for (var i = 0; i < wordList.length; i++)
             {
-                message.channel.send(`"${wordList[i].word}": ${wordList[i].frequency}\n`);
+                message.channel.send(`Word: "${wordList[i].word}", Frequency: ${wordList[i].frequency}\n`);
             }
+
+            message.channel.send(`(end transmission)`);
         }
         else
         {
