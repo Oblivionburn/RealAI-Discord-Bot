@@ -17,6 +17,7 @@ class Brain
             user_id:
             {
                 type: Sequelize.STRING,
+                primaryKey: true,
                 allowNull: false,
             },
             user_name:
@@ -45,8 +46,9 @@ class Brain
         this.Inputs = this.Database.define('inputs', 
         {
             input:
-            { 
+            {
                 type: Sequelize.STRING,
+                primaryKey: true,
                 allowNull: false
             },
             frequency:
@@ -74,7 +76,12 @@ class Brain
                 type: Sequelize.INTEGER,
                 defaultValue: 1,
                 allowNull: false
-            }
+            },
+            indexes:
+            [{
+                unique: true,
+                fields: ['input', 'output']
+            }]
         });
 
         this.Topics = this.Database.define('topics', 
@@ -94,7 +101,12 @@ class Brain
                 type: Sequelize.INTEGER,
                 defaultValue: 1,
                 allowNull: false
-            }
+            },
+            indexes:
+            [{
+                unique: true,
+                fields: ['input', 'topic']
+            }]
         });
 
         this.Words = this.Database.define('words', 
@@ -102,6 +114,7 @@ class Brain
             word: 
             { 
                 type: Sequelize.STRING,
+                primaryKey: true,
                 allowNull: false
             },
             frequency: 
@@ -135,7 +148,12 @@ class Brain
                 type: Sequelize.INTEGER,
                 defaultValue: 0,
                 allowNull: false
-            }
+            },
+            indexes:
+            [{
+                unique: true,
+                fields: ['word', 'pre_word', 'distance']
+            }]
         });
 
         this.ProWords = this.Database.define('pro_words', 
@@ -161,7 +179,12 @@ class Brain
                 type: Sequelize.INTEGER,
                 defaultValue: 0,
                 allowNull: false
-            }
+            },
+            indexes:
+            [{
+                unique: true,
+                fields: ['word', 'pro_word', 'distance']
+            }]
         });
 
         this.WordsBlackList = this.Database.define('words_blacklist', 
