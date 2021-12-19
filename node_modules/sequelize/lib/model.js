@@ -548,7 +548,7 @@ class Model {
           include.subQuery = false;
         } else {
           include.subQueryFilter = false;
-          include.subQuery = include.subQuery || include.hasParentRequired && include.hasRequired;
+          include.subQuery = include.subQuery || include.hasParentRequired && include.hasRequired && !include.separate;
         }
       }
 
@@ -611,7 +611,9 @@ class Model {
 
     // pseudo include just needed the attribute logic, return
     if (include._pseudo) {
-      include.attributes = Object.keys(include.model.tableAttributes);
+      if (!include.attributes) {
+        include.attributes = Object.keys(include.model.tableAttributes);
+      }
       return Utils.mapFinderOptions(include, include.model);
     }
 
@@ -2031,7 +2033,9 @@ class Model {
       if (options.include) {
         col = `${this.name}.${options.col || this.primaryKeyField}`;
       }
-
+      if (options.distinct && col === '*') {
+        col = this.primaryKeyField;
+      }
       options.plain = !options.group;
       options.dataType = new DataTypes.INTEGER();
       options.includeIgnoreAttributes = false;

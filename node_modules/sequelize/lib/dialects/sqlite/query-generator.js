@@ -44,7 +44,11 @@ class SQLiteQueryGenerator extends MySqlQueryGenerator {
 
           if (needsMultiplePrimaryKeys) {
             primaryKeys.push(attr);
-            dataTypeString = dataType.replace('PRIMARY KEY', 'NOT NULL');
+            if (dataType.includes('NOT NULL')) {
+              dataTypeString = dataType.replace(' PRIMARY KEY', '');
+            } else {
+              dataTypeString = dataType.replace('PRIMARY KEY', 'NOT NULL');
+            }
           }
         }
         attrArray.push(`${this.quoteIdentifier(attr)} ${dataTypeString}`);
@@ -430,7 +434,8 @@ class SQLiteQueryGenerator extends MySqlQueryGenerator {
     ).join(', ');
     const attributeNamesExport = Object.keys(attributes).map(attr => this.quoteIdentifier(attr)).join(', ');
 
-    return `${this.createTableQuery(backupTableName, attributes).replace('CREATE TABLE', 'CREATE TEMPORARY TABLE')
+    // Temporary tables don't support foreign keys, so creating a temporary table will not allow foreign keys to be preserved
+    return `${this.createTableQuery(backupTableName, attributes)
     }INSERT INTO ${quotedBackupTableName} SELECT ${attributeNamesImport} FROM ${quotedTableName};`
       + `DROP TABLE ${quotedTableName};${
         this.createTableQuery(tableName, attributes)

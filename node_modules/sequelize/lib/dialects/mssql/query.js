@@ -9,6 +9,13 @@ const { logger } = require('../../utils/logger');
 
 const debug = logger.debugContext('sql:mssql');
 
+function getScale(aNum) {
+  if (!Number.isFinite(aNum)) return 0;
+  let e = 1;
+  while (Math.round(aNum * e) / e !== aNum) e *= 10;
+  return Math.log10(e);
+}
+
 class Query extends AbstractQuery {
   getInsertIdField() {
     return 'id';
@@ -27,7 +34,7 @@ class Query extends AbstractQuery {
       } else {
         paramType.type = TYPES.Numeric;
         //Default to a reasonable numeric precision/scale pending more sophisticated logic
-        paramType.typeOptions = { precision: 30, scale: 15 };
+        paramType.typeOptions = { precision: 30, scale: getScale(value) };
       }
     }
     if (Buffer.isBuffer(value)) {
@@ -197,13 +204,18 @@ class Query extends AbstractQuery {
       return this.handleShowIndexesQuery(data);
     }
     if (this.isUpsertQuery()) {
-      return data[0];
+      this.handleInsertQuery(data);
+      return this.instance || data[0];
     }
     if (this.isCallQuery()) {
       return data[0];
     }
     if (this.isBulkUpdateQuery()) {
-      return data.length;
+      if (this.options.returning) {
+        return this.handleSelectQuery(data);
+      }
+
+      return rowCount;
     }
     if (this.isBulkDeleteQuery()) {
       return data[0] && data[0].AFFECTEDROWS;
@@ -380,6 +392,18 @@ class Query extends AbstractQuery {
       id = id || autoIncrementAttributeAlias && results && results[0][autoIncrementAttributeAlias];
 
       this.instance[autoIncrementAttribute] = id;
+
+      if (this.instance.dataValues) {
+        for (const key in results[0]) {
+          if (Object.prototype.hasOwnProperty.call(results[0], key)) {
+            const record = results[0][key];
+
+            const attr = _.find(this.model.rawAttributes, attribute => attribute.fieldName === key || attribute.field === key);
+
+            this.instance.dataValues[attr && attr.fieldName || key] = record;
+          }
+        }
+      }
     }
   }
 }
