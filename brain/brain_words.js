@@ -38,8 +38,7 @@ module.exports =
     async remove_Blacklisted(table, existing_word)
     {
         var results = await table.findAll({ attributes: ['word'] });
-        if (results != null &&
-            results != '')
+        if (results)
         {
             for (var i = 0; i < results.length; i++)
             {
@@ -53,8 +52,7 @@ module.exports =
     async get_Word(table, message, existing_word)
     {
         var results = await table.findAll({ where: { word: existing_word } })
-        if (results != null &&
-            results != '')
+        if (results)
         {
             for (var i = 0; i < results.length; i++)
             {
@@ -88,8 +86,7 @@ module.exports =
     async get_WordCount(table, message, existing_word)
     {
         var result = await table.findOne({ where: { word: existing_word } })
-        if (result != null &&
-            result != '')
+        if (result)
         {
             return result.frequency;
         }
@@ -103,8 +100,7 @@ module.exports =
             return result = await table.findAll({ where: { word: words } })
                 .then(results => 
                 {
-                    if (results != null &&
-                        results != '')
+                    if (results)
                     {
                         var max = results[0];
                         for (var i = 0; i < results.length; i++)
@@ -133,8 +129,7 @@ module.exports =
             return result = await table.findAll({ where: { word: words } })
                 .then(results => 
                 {
-                    if (results != null &&
-                        results != '')
+                    if (results)
                     {
                         var min = null;
                         for (var i = 0; i < results.length; i++)

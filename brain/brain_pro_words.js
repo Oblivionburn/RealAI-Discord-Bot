@@ -62,12 +62,17 @@ module.exports =
             console.error(error);
         }
     },
+    async remove_Pro_Words(table, message, existing_pro_word)
+    {
+        await table.destroy({ where: { pro_word: existing_pro_word } })
+            .then(message.channel.send(`Pro-word "${existing_pro_word}" has been removed from the database.`));
+    },
     async remove_Pro_Word(table, message, existing_word, existing_pro_word)
     {
         await table.destroy({ where: { word: existing_word, pro_word: existing_pro_word } })
             .then(message.channel.send(`Pro-word "${existing_pro_word}" for "${existing_word}" has been removed from the database.`));
     },
-    async remove_Pro_Words(table, message)
+    async remove_Pro_Words_All(table, message)
     {
         await table.destroy({ where: {} })
             .then(message.channel.send(`All pro-words have been removed from the database.`));
@@ -75,8 +80,7 @@ module.exports =
     async remove_Blacklisted(table, existing_word)
     {
         var results = await table.findAll({ attributes: ['word', 'pro_word'] });
-        if (results != null &&
-            results != '')
+        if (results)
         {
             for (var i = 0; i < results.length; i++)
             {
@@ -96,8 +100,7 @@ module.exports =
         try
         {
             var result = await table.findAll({ attributes: ['word', 'pro_word', 'frequency', 'distance'] });
-            if (result != null &&
-                result != '')
+            if (result)
             {
                 for (var i = 0; i < result.length; i++)
                 {
@@ -119,8 +122,7 @@ module.exports =
     async get_Pro_Words(table, message, existing_pro_word)
     {
         var result = await table.findAll({ where: { word: existing_pro_word } });
-        if (result != null &&
-            result != '')
+        if (result)
         {
             for (var i = 0; i < result.length; i++)
             {
@@ -137,8 +139,7 @@ module.exports =
     async get_Pro_Words_Matching(table, message, existing_pro_word, existing_word)
     {
         var result = await table.findAll({ where: { word: existing_word, pro_word: existing_pro_word } });
-        if (result != null &&
-            result != '')
+        if (result)
         {
             for (var i = 0; i < result.length; i++)
             {
@@ -154,93 +155,103 @@ module.exports =
     },
     async get_Pro_Words_Max(message, table, words, current_word)
     {
+        var chosen_word = null;
+
         try
         {
-            var results = await table.findAll({ where: { word: current_word, distance: 1 } })
-            if (results)
+            if (words.length > 0)
             {
-                //message.channel.send(`Getting pro-words for "${current_word}"...`);
-
-                //Get the max frequency in the results
-                var selected = results[0];
-                var max = results[0].frequency;
-
-                for (var i = 0; i < results.length; i++)
+                var possible_words = [];
+                var possible_word_priority = [];
+                var data_rows = [];
+                var count = 1;
+                
+                for (var w = words.length - 1; w >= 0; w--)
                 {
-                    //message.channel.send(`Pro-Word: "${results[i].pro_word}", Frequency: ${results[i].frequency}`);
-                    if (results[i].frequency >= max)
+                    var current_word = words[w];
+
+                    //message.channel.send(`Getting pro-words for "${current_word}" at distance ${count}...`);
+                    var results = await table.findAll({ where: { word: current_word, distance: count } })
+                    if (results)
                     {
-                        max = results[i].frequency;
-                        selected = results[i];
+                        for (var i = 0; i < results.length; i++)
+                        {
+                            //message.channel.send(`Pro-Word: "${results[i].pro_word}", Frequency: ${results[i].frequency}`);
+                            data_rows.push(results[i]);
+                        }
+                        
+                        count++;
                     }
                 }
 
-                //message.channel.send(`Max Frequency: ${selected.frequency}`);
-
-                //Get highest frequency pro_word with a distance of 2 for the previous word
-                var reinforced = selected;
-                //message.channel.send(`Reinforcing pro-word: "${reinforced.pro_word}"`);
-
-                if (words.length > 1)
+                for (var i = 0; i < data_rows.length; i++)
                 {
-                    //message.channel.send(`Getting pro-words 2 after for "${words[words.length - 2]}"...`);
-
-                    var previous_words = await table.findAll({ where: { word: words[words.length - 2], distance: 2 } });
-                    if (previous_words)
+                    var word = data_rows[i].word;
+                    var pro_word = data_rows[i].pro_word;
+                    var frequency = data_rows[i].frequency;
+                    var distance = data_rows[i].distance;
+    
+                    if (distance == 1)
                     {
-                        var highest = previous_words[0];
-                        for (var i = 0; i < previous_words.length; i++)
+                        //Get options
+                        //message.channel.send(`Adding possible word at Distance 1: Pro-word "${pro_word}"; Frequency ${frequency}`);
+                        possible_words.push(pro_word);
+                        possible_word_priority.push(frequency);
+                    }
+                    else if (possible_words.length > 0)
+                    {
+                        //Reinforce options that match farther distances
+                        for (var p = 0; p < possible_words.length; p++)
                         {
-                            //message.channel.send(`Pro-Word: "${previous_words[i].pro_word}", Frequency: ${previous_words[i].frequency}`);
-
-                            if (previous_words[i].frequency >= highest.frequency)
+                            if (possible_words[p] == pro_word)
                             {
-                                highest = previous_words[i];
+                                //message.channel.send(`Reinforcing possible Pro-Word at Distance ${distance} from Word "${word}": "${possible_words[p]}"`);
+                                possible_word_priority[p]++;
+                                break;
                             }
                         }
-
-                        reinforced = highest;
-                        //message.channel.send(`Now reinforcing pro-word: "${reinforced.pro_word}"`);
-
-                        max += reinforced.frequency;
-                        //message.channel.send(`Adjusted max: ${max}`);
                     }
                 }
 
-                //Randomly select one, with a bias towards those with higher frequency
-                for (var i = 0; i < results.length; i++)
+                //Get max priority from options
+                var max = 0;
+                for (var p = 0; p < possible_word_priority.length; p++)
                 {
-                    //message.channel.send(`Choose "${results[i].pro_word}"?`);
-
-                    //Gen random number between 0 and max frequency
-                    var random = Math.floor(Math.random() * (max + 1));
-                    //message.channel.send(`Random number: ${random}`);
-
-                    //Get frequency
-                    var value = results[i].frequency;
-                    //message.channel.send(`Frequency of "${results[i].pro_word}" is ${value}`);
-
-                    //Add bias towards reinforced word
-                    if (results[i].pro_word == reinforced.pro_word)
+                    var priority = possible_word_priority[p];
+                    if (priority > max)
                     {
-                        //message.channel.send(`"${results[i].pro_word}" matches reinforced pro-word "${reinforced.pro_word}"`);
-
-                        value += reinforced.frequency;
-                        //message.channel.send(`Adjusted weight: ${value}`);
+                        max = priority;
                     }
+                }
+                //message.channel.send(`Max frequency: ${max}`);
 
-                    if (value >= random)
+                //Get words at max priority
+                var priority_words = [];
+                for (var p = 0; p < possible_words.length; p++)
+                {
+                    var word = possible_words[p];
+                    var priority = possible_word_priority[p];
+
+                    if (priority == max)
                     {
-                        //message.channel.send(`${value} is greater than random value ${random}`);
-
-                        selected = results[i];
-                        //message.channel.send(`"${selected.pro_word}" has been chosen.`);
-
-                        break;
+                        //message.channel.send(`Possible word at max frequency: ${word}`);
+                        priority_words.push(word);
                     }
                 }
 
-                return selected.pro_word;
+                if (priority_words.length > 1)
+                {
+                    //message.channel.send(`Found more than one possible word, selecting one at random...`);
+                    //If there's more than one, pick at random
+                    var choice = Math.floor(Math.random() * (priority_words.length + 1));
+                    chosen_word = priority_words[choice];
+                }
+                else
+                {
+                    chosen_word = priority_words[0];
+                }
+
+                //message.channel.send(`Chosen Pro-Word: ${chosen_word}`);
             }
         }
         catch (error)
@@ -248,13 +259,12 @@ module.exports =
             console.error(error);
         }
 
-        return null;
+        return chosen_word;
     },
     async get_Pro_WordCount(table, existing_word, existing_pro_word)
     {
         var result = await table.findOne({ where: { word: existing_word, pre_word: existing_pro_word } })
-        if (result != null &&
-            result != '')
+        if (result)
         {
             return result.frequency;
         }
@@ -264,29 +274,27 @@ module.exports =
     async decrease_Pro_WordCount(table, message, existing_word, existing_pro_word)
     {
         var result = await table.findOne({ where: { word: existing_word, pro_word: existing_pro_word } })
-        if (result != null &&
-            result != '')
+        if (result)
         {
             result.decrement('frequency');
-            message.channel.send(`"${result.pro_word}" <- "${result.word}": ${result.frequency - 1}`);
+            //message.channel.send(`"${result.pro_word}" <- "${result.word}": ${result.frequency - 1}`);
         }
         else
         {
-            message.channel.send(`Could not find pro-word "${existing_pro_word}" for "${existing_word}" in the database.`);
+            //message.channel.send(`Could not find pro-word "${existing_pro_word}" for "${existing_word}" in the database.`);
         }
     },
     async increase_Pro_WordCount(table, message, existing_word, existing_pro_word)
     {
         var result = await table.findOne({ where: { word: existing_word, pro_word: existing_pro_word } })
-        if (result != null &&
-            result != '')
+        if (result)
         {
             result.increment('frequency');
-            message.channel.send(`"${result.pro_word}" <- "${result.word}": ${result.frequency + 1}`);
+            //message.channel.send(`"${result.pro_word}" <- "${result.word}": ${result.frequency + 1}`);
         }
         else
         {
-            message.channel.send(`Could not find pro-word "${existing_pro_word}" for "${existing_word}" in the database.`);
+            //message.channel.send(`Could not find pro-word "${existing_pro_word}" for "${existing_word}" in the database.`);
         }
     }
 }

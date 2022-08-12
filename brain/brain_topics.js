@@ -26,10 +26,10 @@ module.exports =
             console.error(error);
         }
     },
-    async remove_Topic(table, message, existing_input, existing_topic)
+    async remove_Topic(table, message, existing_topic)
     {
-        await table.destroy({ where: { input: existing_input, topic: existing_topic } })
-            .then(message.channel.send(`"${existing_topic}" topic for "${existing_input}" has been removed from the database.`));
+        await table.destroy({ where: { topic: existing_topic } })
+            .then(message.channel.send(`"${existing_topic}" topic has been removed from the database.`));
     },
     async remove_Topics(table, message)
     {
@@ -39,8 +39,7 @@ module.exports =
     async remove_Blacklisted(table, existing_word)
     {
         var results = await table.findAll({ attributes: ['input', 'topic'] });
-        if (results != null &&
-            results != '')
+        if (results)
         {
             for (var i = 0; i < results.length; i++)
             {
@@ -77,8 +76,7 @@ module.exports =
     async get_Topics(table, message, existing_topic)
     {
         var results = await table.findAll({ where: { topic: existing_topic } })
-        if (results != null &&
-            results != '')
+        if (results)
         {
             var wordString = "";
             for (var i = 0; i < results.length; i++)
@@ -96,8 +94,7 @@ module.exports =
     async get_Topics_Input(table, message, existing_input)
     {
         var results = await table.findAll({ where: { input: existing_input } })
-        if (results != null &&
-            results != '')
+        if (results)
         {
             var wordString = "";
             for (var i = 0; i < results.length; i++)
@@ -109,22 +106,48 @@ module.exports =
         }
         else
         {
-            message.channel.send(`Could any topics for "${existing_input}" in the database.`);
+            message.channel.send(`Could not find any topics for "${existing_input}" in the database.`);
         }
     },
     async get_Inputs_With_Topic(table, existing_topic)
     {
         var results = await table.findAll({ where: { topic: existing_topic } })
-        if (results != null &&
-            results != '')
+        if (results)
         {
+            //Get max frequency
+            var max = 0;
+            for (var i = 0; i < results.length; i++)
+            {
+                var frequency = results[i].frequency;
+                if (frequency > max)
+                {
+                    max = frequency;
+                }
+            }
+
+            //Get inputs at max frequency
             var inputs = [];
             for (var i = 0; i < results.length; i++)
             {
-                inputs.push(results[i].input)
+                var input = results[i].input;
+                var frequency = results[i].frequency;
+
+                if (frequency == max)
+                {
+                    inputs.push(input);
+                }
             }
 
-            return inputs;
+            if (inputs.length > 1)
+            {
+                //If there's more than one, pick at random
+                var choice = Math.floor(Math.random() * (inputs.length + 1));
+                return inputs[choice];
+            }
+            else
+            {
+                return inputs[0];
+            }
         }
 
         return null;
@@ -132,8 +155,7 @@ module.exports =
     async get_Topics_For_Input(table, existing_input)
     {
         var results = await table.findAll({ where: { input: existing_input } })
-        if (results != null &&
-            results != '')
+        if (results)
         {
             var topics = [];
             for (var i = 0; i < results.length; i++)
@@ -149,8 +171,7 @@ module.exports =
     async get_TopicCount(table, existing_topic)
     {
         var result = await table.findOne({ where: { topic: existing_topic } })
-        if (result != null &&
-            result != '')
+        if (result)
         {
             return result.frequency;
         }
@@ -190,8 +211,7 @@ module.exports =
     async decrease_TopicCount(table, message, existing_input, existing_topic)
     {
         var result = await table.findOne({ where: { input: existing_input, topic: existing_topic } })
-        if (result != null &&
-            result != '')
+        if (result)
         {
             result.decrement('frequency');
             message.channel.send(`"${wordList[i].input}" -> "${wordList[i].topic}": ${wordList[i].frequency} -> ${wordList[i].frequency - 1}`);
@@ -204,8 +224,7 @@ module.exports =
     async increase_TopicCount(table, message, existing_input, existing_topic)
     {
         var result = await table.findOne({ where: { input: existing_input, topic: existing_topic } })
-        if (result != null &&
-            result != '')
+        if (result)
         {
             result.increment('frequency');
             message.channel.send(`"${wordList[i].input}" -> "${wordList[i].topic}": ${wordList[i].frequency} -> ${wordList[i].frequency + 1}`);

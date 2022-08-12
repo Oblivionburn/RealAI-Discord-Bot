@@ -433,8 +433,6 @@ async function Respond(message, input, words)
 async function GenerateResponse(message, topic)
 {
     var words_found = true;
-    var current_pre_word = topic;
-    var current_pro_word = topic;
     var response_words = [];
     var response = "";
 
@@ -444,12 +442,12 @@ async function GenerateResponse(message, topic)
 
         while (words_found)
         {
-            current_pre_word = await Brain_PreWords.get_Pre_Words_Max(message, brain.PreWords, response_words, current_pre_word);
-            if (current_pre_word)
+            var pre_word = await Brain_PreWords.get_Pre_Words_Max(message, brain.PreWords, response_words);
+            if (pre_word)
             {
                 if (words_found)
                 {
-                    response_words.unshift(current_pre_word);
+                    response_words.unshift(pre_word);
                 }
 
                 //Check for repeating chunk of response
@@ -505,15 +503,15 @@ async function GenerateResponse(message, topic)
         words_found = true;
         while (words_found)
         {
-            current_pro_word = await Brain_ProWords.get_Pro_Words_Max(message, brain.ProWords, response_words, current_pro_word);
-            if (current_pro_word)
+            var pro_word = await Brain_ProWords.get_Pro_Words_Max(message, brain.ProWords, response_words);
+            if (pro_word)
             {
                 if (words_found)
                 {
-                    response_words.push(current_pro_word);
+                    response_words.push(pro_word);
                 }
 
-                if (Util.EndingPunctuation().includes(current_pro_word))
+                if (Util.EndingPunctuation().includes(pro_word))
                 {
                     break;
                 }

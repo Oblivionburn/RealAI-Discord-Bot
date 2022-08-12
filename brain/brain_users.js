@@ -48,8 +48,7 @@ module.exports =
     async get_User(table, message, existing_user)
     {
         var result = await table.findAll({ where: { user_name: existing_user } });
-        if (result != null &&
-            result != '')
+        if (result)
         {
             var userString = "";
             for (var i = 0; i < result.length; i++)
@@ -71,8 +70,7 @@ module.exports =
     async get_Users(table, message)
     {
         var result = await table.findAll({ attributes: ['user_id', 'user_name', 'last_input', 'last_response', 'time_stamp'] });
-        if (result != null &&
-            result != '')
+        if (result)
         {
             var userString = "";
             for (var i = 0; i < result.length; i++)
@@ -96,16 +94,9 @@ module.exports =
         try
         {
             var result = await table.findOne({ where: { user_id: existing_id } });
-            if (result != null &&
-                result != '')
+            if (result)
             {
-                var now = Date.now();
-                var delay = new Date(new Date(result.time_stamp).getTime() + 60000);
-
-                if (delay >= now)
-                {
-                    return result.last_response;
-                }
+                return result.last_response;
             }
         }
         catch (error)
@@ -132,5 +123,22 @@ module.exports =
         {
             console.error(error);
         }
-    }
+    },
+    async get_User_LastInput(table, existing_id)
+    {
+        try
+        {
+            var result = await table.findOne({ where: { user_id: existing_id } });
+            if (result)
+            {
+                return result.last_input;
+            }
+        }
+        catch (error)
+        {
+            console.error(error);
+        }
+
+        return null;
+    },
 }

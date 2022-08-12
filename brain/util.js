@@ -14,7 +14,7 @@ module.exports =
     },
     SpecialCharacters()
     {
-        return [",", "'"];
+        return [","];
     },
     EndingPunctuation()
     {

@@ -37,8 +37,7 @@ module.exports =
     async remove_Blacklisted(table, existing_word)
     {
         var results = await table.findAll({ attributes: ['input'] });
-        if (results != null &&
-            results != '')
+        if (results)
         {
             for (var i = 0; i < results.length; i++)
             {
@@ -52,8 +51,7 @@ module.exports =
     async get_Input(table, message, existing_input)
     {
         var results = await table.findAll({ where: { input: existing_input } });
-        if (results != null &&
-            results != '')
+        if (results)
         {
             for (var i = 0; i < results.length; i++)
             {
@@ -70,8 +68,7 @@ module.exports =
     async get_Inputs(table, message)
     {
         var results = await table.findAll({ attributes: ['input', 'frequency'] });
-        if (results != null &&
-            results != '')
+        if (results)
         {
             var inputString = "";
             for (var i = 0; i < results.length; i++)
@@ -89,8 +86,7 @@ module.exports =
     async get_InputCount(table, message, existing_input)
     {
         var result = await table.findOne({ where: { input: existing_input } })
-        if (result != null &&
-            result != '')
+        if (result)
         {
             return result.frequency;
         }
@@ -102,8 +98,7 @@ module.exports =
         try
         {
             var results = await table.findAll({ attributes: ['input'] });
-            if (results != null &&
-                results != '')
+            if (results)
             {
                 var inputs = [];
                 for (var i = 0; i < results.length; i++)
@@ -143,8 +138,7 @@ module.exports =
         try
         {
             var results = await table.findAll({ attributes: ['input'] });
-            if (results != null &&
-                results != '')
+            if (results)
             {
                 var inputs = [];
                 for (var i = 0; i < results.length; i++)

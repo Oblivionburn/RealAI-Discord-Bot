@@ -2,18 +2,18 @@ var Sequelize = require('sequelize');
 
 module.exports = 
 {
-    async add_Pre_Words(message, table, existing_words, new_words, distances)
+    async add_Pre_Words(message, table, words, pre_words, distances)
     {
         try 
         {
-            for (var i = 0; i < new_words.length; i++)
+            for (var i = 0; i < pre_words.length; i++)
             {
-                await table.findOne({ where: { word: existing_words[i], pre_word: new_words[i], distance: distances[i] } })
+                await table.findOne({ where: { word: words[i], pre_word: pre_words[i], distance: distances[i] } })
                     .then(result => 
                     {
                         if (!result) 
                         {
-                            table.create({ word: existing_words[i], pre_word: new_words[i], distance: distances[i] });
+                            table.create({ word: words[i], pre_word: pre_words[i], distance: distances[i] });
                         }
                         else
                         {
@@ -64,12 +64,17 @@ module.exports =
             console.error(error);
         }
     },
+    async remove_Pre_Words(table, message, existing_pre_word)
+    {
+        await table.destroy({ where: { pre_word: existing_pre_word } })
+            .then(message.channel.send(`Pre-word "${existing_pre_word}" has been removed from the database.`));
+    },
     async remove_Pre_Word(table, message, existing_word, existing_pre_word)
     {
         await table.destroy({ where: { word: existing_word, pre_word: existing_pre_word } })
             .then(message.channel.send(`Pre-word "${existing_pre_word}" for "${existing_word}" has been removed from the database.`));
     },
-    async remove_Pre_Words(table, message)
+    async remove_Pre_Words_All(table, message)
     {
         await table.destroy({ where: {} })
             .then(message.channel.send(`All pre-words have been removed from the database.`));
@@ -77,8 +82,7 @@ module.exports =
     async remove_Blacklisted(table, existing_word)
     {
         var results = await table.findAll({ attributes: ['word', 'pre_word'] });
-        if (results != null &&
-            results != '')
+        if (results)
         {
             for (var i = 0; i < results.length; i++)
             {
@@ -98,8 +102,7 @@ module.exports =
         try
         {
             var result = await table.findAll({ attributes: ['word', 'pre_word', 'frequency', 'distance'] });
-            if (result != null &&
-                result != '')
+            if (result)
             {
                 for (var i = 0; i < result.length; i++)
                 {
@@ -121,8 +124,7 @@ module.exports =
     async get_Pre_Words(table, message, existing_pre_word)
     {
         var result = await table.findAll({ where: { word: existing_pre_word } });
-        if (result != null &&
-            result != '')
+        if (result)
         {
             for (var i = 0; i < result.length; i++)
             {
@@ -139,8 +141,7 @@ module.exports =
     async get_Pre_Words_Matching(table, message, existing_pre_word, existing_word)
     {
         var result = await table.findAll({ where: { word: existing_word, pre_word: existing_pre_word } });
-        if (result != null &&
-            result != '')
+        if (result)
         {
             for (var i = 0; i < result.length; i++)
             {
@@ -158,94 +159,105 @@ module.exports =
     {
         return await table.findAll({ where: { word: existing_word } });
     },
-    async get_Pre_Words_Max(message, table, words, current_word)
+    async get_Pre_Words_Max(message, table, words)
     {
+        var chosen_word = null;
+
         try
         {
-            var results = await table.findAll({ where: { word: current_word, distance: 1 } })
-            if (results)
+            if (words.length > 0)
             {
-                //message.channel.send(`Getting pre-words for "${current_word}"...`);
-
-                //Get the max frequency in the results
-                var selected = results[0];
-                var max = results[0].frequency;
+                var possible_words = [];
+                var possible_word_priority = [];
+                var data_rows = [];
+                var count = 1;
                 
-                for (var i = 0; i < results.length; i++)
+                for (var w = 0; w < words.length; w++)
                 {
-                    //message.channel.send(`Pre-Word: "${results[i].pre_word}", Frequency: ${results[i].frequency}`);
-                    if (results[i].frequency >= max)
+                    var current_word = words[w];
+
+                    //message.channel.send(`Getting pre-words for "${current_word}" at distance ${count}...`);
+                    var results = await table.findAll({ where: { word: current_word, distance: count } })
+                    if (results)
                     {
-                        max = results[i].frequency;
-                        selected = results[i];
+                        for (var i = 0; i < results.length; i++)
+                        {
+                            //message.channel.send(`Pre-Word: "${results[i].pre_word}", Frequency: ${results[i].frequency}`);
+                            data_rows.push(results[i]);
+                        }
+                        
+                        count++;
                     }
                 }
 
-                //message.channel.send(`Max Frequency: ${selected.frequency}`);
-
-                //Get highest frequency pre_word with a distance of 2 for the previous word
-                var reinforced = selected;
-                //message.channel.send(`Reinforcing pre-word: "${reinforced.pre_word}"`);
-
-                if (words.length > 1)
+                for (var i = 0; i < data_rows.length; i++)
                 {
-                    //message.channel.send(`Getting pre-words 2 before for "${words[1]}"...`);
-
-                    var previous_words = await table.findAll({ where: { word: words[1], distance: 2 } });
-                    if (previous_words)
+                    var word = data_rows[i].word;
+                    var pre_word = data_rows[i].pre_word;
+                    var frequency = data_rows[i].frequency;
+                    var distance = data_rows[i].distance;
+    
+                    if (distance == 1)
                     {
-                        var highest = previous_words[0];
-                        for (var i = 0; i < previous_words.length; i++)
+                        //Get options
+                        //message.channel.send(`Adding possible word at Distance 1: Pre-word "${pre_word}"; Frequency ${frequency}`);
+                        possible_words.push(pre_word);
+                        possible_word_priority.push(frequency);
+                    }
+                    else if (possible_words.length > 0)
+                    {
+                        //Reinforce options that match farther distances
+                        for (var p = 0; p < possible_words.length; p++)
                         {
-                            //message.channel.send(`Pre-Word: "${previous_words[i].pre_word}", Frequency: ${previous_words[i].frequency}`);
-                            if (previous_words[i].frequency >= highest.frequency)
+                            if (possible_words[p] == pre_word)
                             {
-                                highest = previous_words[i];
+                                //message.channel.send(`Reinforcing possible Pre-Word at Distance ${distance} from Word "${word}": "${possible_words[p]}"`);
+                                possible_word_priority[p]++;
+                                break;
                             }
                         }
-
-                        reinforced = highest;
-                        //message.channel.send(`Now reinforcing pre-word: "${reinforced.pre_word}"`);
-
-                        max += reinforced.frequency;
-                        //message.channel.send(`Adjusted max: ${max}`);
                     }
                 }
 
-                //Randomly select one, with a bias towards those with higher frequency
-                for (var i = 0; i < results.length; i++)
+                //Get max priority from options
+                var max = 0;
+                for (var p = 0; p < possible_word_priority.length; p++)
                 {
-                    //message.channel.send(`Choose "${results[i].pre_word}"?`);
-
-                    //Gen random number between 0 and max frequency
-                    var random = Math.floor(Math.random() * (max + 1));
-                    //message.channel.send(`Random number: ${random}`);
-
-                    //Get frequency
-                    var value = results[i].frequency;
-                    //message.channel.send(`Frequency of "${results[i].pre_word}" is ${value}`);
-
-                    //Add bias towards reinforced word
-                    if (results[i].pre_word == reinforced.pre_word)
+                    var priority = possible_word_priority[p];
+                    if (priority > max)
                     {
-                        //message.channel.send(`"${results[i].pre_word}" matches reinforced pre-word "${reinforced.pre_word}"`);
-                        value += reinforced.frequency;
-
-                        //message.channel.send(`Adjusted weight for "${results[i].pre_word}": ${value}`);
+                        max = priority;
                     }
+                }
+                //message.channel.send(`Max frequency: ${max}`);
 
-                    if (value >= random)
+                //Get words at max priority
+                var priority_words = [];
+                for (var p = 0; p < possible_words.length; p++)
+                {
+                    var word = possible_words[p];
+                    var priority = possible_word_priority[p];
+
+                    if (priority == max)
                     {
-                        //message.channel.send(`${value} is greater than random value ${random}`);
-
-                        selected = results[i];
-                        //message.channel.send(`"${selected.pre_word}" has been chosen.`);
-
-                        break;
+                        //message.channel.send(`Possible word at max frequency: ${word}`);
+                        priority_words.push(word);
                     }
                 }
 
-                return selected.pre_word;
+                if (priority_words.length > 1)
+                {
+                    //message.channel.send(`Found more than one possible word, selecting one at random...`);
+                    //If there's more than one, pick at random
+                    var choice = Math.floor(Math.random() * (priority_words.length + 1));
+                    chosen_word = priority_words[choice];
+                }
+                else
+                {
+                    chosen_word = priority_words[0];
+                }
+
+                //message.channel.send(`Chosen Pre-Word: ${chosen_word}`);
             }
         }
         catch (error)
@@ -253,13 +265,12 @@ module.exports =
             console.error(error);
         }
 
-        return null;
+        return chosen_word;
     },
     async get_Pre_WordCount(table, existing_word, existing_pre_word)
     {
         var result = await table.findOne({ where: { word: existing_word, pre_word: existing_pre_word } })
-        if (result != null &&
-            result != '')
+        if (result)
         {
             return result.frequency;
         }
@@ -269,29 +280,27 @@ module.exports =
     async decrease_Pre_WordCount(table, message, existing_word, existing_pre_word)
     {
         var result = await table.findOne({ where: { word: existing_word, pre_word: existing_pre_word } })
-        if (result != null &&
-            result != '')
+        if (result)
         {
             result.decrement('frequency');
-            message.channel.send(`"${result.pre_word}" -> "${result.word}": ${result.frequency - 1}`);
+            //message.channel.send(`"${result.pre_word}" -> "${result.word}": ${result.frequency - 1}`);
         }
         else
         {
-            message.channel.send(`Could not find pre-word "${existing_pre_word}" for "${existing_word}" in the database.`);
+            //message.channel.send(`Could not find pre-word "${existing_pre_word}" for "${existing_word}" in the database.`);
         }
     },
     async increase_Pre_WordCount(table, message, existing_word, existing_pre_word)
     {
         var result = await table.findOne({ where: { word: existing_word, pre_word: existing_pre_word } })
-        if (result != null &&
-            result != '')
+        if (result)
         {
             result.increment('frequency');
-            message.channel.send(`"${result.pre_word}" -> "${result.word}": ${result.frequency + 1}`);
+            //message.channel.send(`"${result.pre_word}" -> "${result.word}": ${result.frequency + 1}`);
         }
         else
         {
-            message.channel.send(`Could not find pre-word "${existing_pre_word}" for "${existing_word}" in the database.`);
+            //message.channel.send(`Could not find pre-word "${existing_pre_word}" for "${existing_word}" in the database.`);
         }
     }
 }

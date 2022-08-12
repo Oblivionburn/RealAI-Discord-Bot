@@ -35,8 +35,7 @@ module.exports =
     async remove_Blacklisted(table, existing_word)
     {
         var results = await table.findAll({ attributes: ['input', 'output'] });
-        if (results != null &&
-            results != '')
+        if (results)
         {
             for (var i = 0; i < results.length; i++)
             {
@@ -88,8 +87,7 @@ module.exports =
     async get_Outputs_For_Input(table, message, existing_input)
     {
         var results = await table.findAll({ where: { input: existing_input } });
-        if (results != null &&
-            results != '')
+        if (results)
         {
             var outputs = [];
             for (var i = 0; i < results.length; i++)
@@ -109,8 +107,7 @@ module.exports =
             return result = await table.findAll({ where: { input: existing_input } })
                 .then(results => 
                 {
-                    if (results != null &&
-                        results != '')
+                    if (results)
                     {
                         //Get the max frequency of all outputs for the given input
                         var max = results[0];
@@ -148,8 +145,7 @@ module.exports =
     async get_OutputCount(table, existing_input, existing_output)
     {
         var result = await table.findOne({ where: { input: existing_input, output: existing_output } })
-        if (result != null &&
-            result != '')
+        if (result)
         {
             return result.frequency;
         }
@@ -159,8 +155,7 @@ module.exports =
     async decrease_OutputCount(table, message, existing_input, existing_output)
     {
         var result = await table.findOne({ where: { input: existing_input, output: existing_output } })
-        if (result != null &&
-            result != '')
+        if (result)
         {
             result.decrement('frequency');
             message.channel.send(`"${result.input}" -> "${result.output}": ${result.frequency} -> ${result.frequency - 1}`);
@@ -173,8 +168,7 @@ module.exports =
     async increase_OutputCount(table, message, existing_input, existing_output)
     {
         var result = await table.findOne({ where: { input: existing_input, output: existing_output } })
-        if (result != null &&
-            result != '')
+        if (result)
         {
             result.increment('frequency');
             message.channel.send(`"${result.input}" -> "${result.output}": ${result.frequency} -> ${result.frequency + 1}`);
