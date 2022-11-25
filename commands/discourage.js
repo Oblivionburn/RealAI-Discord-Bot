@@ -99,7 +99,7 @@ module.exports =
                     }
                 }
 
-                message.channel.send(`(discouraged last response: "${last_response})"`);
+                message.channel.send(`(discouraged last response: "${last_response}")`);
 
                 //message.channel.send(`Removing last response for user...`);
                 await Brain_Users.remove_User_LastResponse(brain.Users, message.author.id);

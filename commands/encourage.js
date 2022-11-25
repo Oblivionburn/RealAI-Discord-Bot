@@ -84,7 +84,7 @@ module.exports =
                     }
                 }
 
-                message.channel.send(`(encouraged last response: "${last_response})"`);
+                message.channel.send(`(encouraged last response: "${last_response}")`);
 
                 await Brain_Users.remove_User_LastResponse(brain.Users, message.author.id);
                 message.channel.send(`(new session started with ${message.author.username})`);
