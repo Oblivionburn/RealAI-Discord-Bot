@@ -2,9 +2,16 @@ module.exports =
 {
     name: 'database_Delete',
     description: 'Deletes everything from the database.',
-    usage: '',
+    usage: 'blank or [Word]',
     async execute(brain, message, args) 
     {
-        await brain.wipe(message);
+        if (args.length > 0)
+        {
+            await brain.wipe_Word(message, args[0]);
+        }
+        else
+        {
+            await brain.wipe(message);
+        }
     }
 };

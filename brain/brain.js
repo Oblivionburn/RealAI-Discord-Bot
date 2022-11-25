@@ -221,6 +221,17 @@ class Brain
             .then(this.WordsBlackList.destroy({ where: {} }))
             .then(message.channel.send(`Everything has been removed from the database.`));
     }
+
+    async wipe_Word(message, existing_word)
+    {
+        await this.Words.destroy({ where: { word: existing_word } })
+            .then(this.Inputs.destroy({ where: { input: { [Sequelize.Op.like]: '%' + existing_word + '%' } } }))
+            .then(this.PreWords.destroy({ where: { [Sequelize.Op.or]: [{ pre_word: existing_word }, { word: existing_word }] } }))
+            .then(this.ProWords.destroy({ where: { [Sequelize.Op.or]: [{ pro_word: existing_word }, { word: existing_word }] } }))
+            .then(this.Topics.destroy({ where: { [Sequelize.Op.or]: [{ topic: existing_word }, { input: { [Sequelize.Op.like]: '%' + existing_word + '%' } }] } }))
+            .then(this.Outputs.destroy({ where: { [Sequelize.Op.or]: [{ output: { [Sequelize.Op.like]: '%' + existing_word + '%' } }, { input: { [Sequelize.Op.like]: '%' + existing_word + '%' } }] } }))
+            .then(message.channel.send(`Everything containing "${existing_word}" has been removed from the database.`));
+    }
 }
 
 module.exports = Brain;
