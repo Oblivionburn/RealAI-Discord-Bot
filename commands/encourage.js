@@ -1,6 +1,5 @@
 var Brain_PreWords = require('../brain/brain_pre_words.js');
 var Brain_ProWords = require('../brain/brain_pro_words.js');
-var Brain_Topics = require('../brain/brain_topics.js');
 var Brain_Users = require('../brain/brain_users.js');
 var Util = require('../brain/util.js');
 
@@ -24,31 +23,26 @@ module.exports =
                     word_array.shift();
                 }
 
+                //message.channel.send(`Getting Pre-Words...`);
                 //Get PreWords
-                var words = [];
                 var pre_words = [];
-
-                for (var i = 1; i < word_array.length; i++)
+                for (var i = 0; i < word_array.length; i++)
                 {
-                    for (var j = i - 1; j >= 0; j--)
+                    var result = await Brain_PreWords.get_Pre_Word_AtDistance(brain.PreWords, message, word_array[i], 1);
+                    if (result)
                     {
-                        if (word_array[i] &&
-                            word_array[j])
-                        {
-                            words.push(word_array[i]);
-                            pre_words.push(word_array[j]);
-                        }
+                        pre_words.push(result);
                     }
                 }
 
                 //Increment PreWords
                 for (var i = 0; i < words.length; i++)
                 {
-                    await Brain_PreWords.increase_Pre_WordCount(brain.PreWords, message, words[i], pre_words[i]);
+                    await Brain_PreWords.increase_Pre_WordCount(brain.PreWords, message, word_array[i], pre_words[i]);
                 }
 
                 //Get ProWords
-                words = [];
+                var words = [];
                 var pro_words = [];
 
                 for (var i = 0; i < word_array.length - 1; i++)

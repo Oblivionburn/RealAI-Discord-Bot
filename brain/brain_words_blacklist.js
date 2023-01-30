@@ -3,7 +3,6 @@ var Brain_Outputs = require('./brain_outputs.js');
 var Brain_Words = require('./brain_words.js');
 var Brain_PreWords = require('./brain_pre_words.js');
 var Brain_ProWords = require('./brain_pro_words.js');
-var Brain_Topics = require('./brain_topics.js');
 
 module.exports = 
 {
@@ -23,8 +22,7 @@ module.exports =
                                 .then(Brain_Outputs.remove_Blacklisted(brain.Outputs, new_words[i]))
                                 .then(Brain_Words.remove_Blacklisted(brain.Words, new_words[i]))
                                 .then(Brain_PreWords.remove_Blacklisted(brain.PreWords, new_words[i]))
-                                .then(Brain_ProWords.remove_Blacklisted(brain.ProWords, new_words[i]))
-                                .then(Brain_Topics.remove_Blacklisted(brain.Topics, new_words[i]));
+                                .then(Brain_ProWords.remove_Blacklisted(brain.ProWords, new_words[i]));
 
                             message.channel.send(`"${new_words[i]}" has been added to the blacklist.`);
                         }

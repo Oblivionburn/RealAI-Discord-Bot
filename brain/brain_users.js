@@ -35,10 +35,9 @@ module.exports =
             console.error(error);
         }
     },
-    async remove_User(table, message, user_name)
+    async remove_Single_User(table, message, user_name)
     {
-        await table.destroy({ where: { user_name: user_name } })
-            .then(message.channel.send(`${user_name} has been removed from the database.`));
+        await table.destroy({ where: { user_name: user_name } });
     },
     async remove_User(table, message)
     {

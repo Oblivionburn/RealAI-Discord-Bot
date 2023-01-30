@@ -10,7 +10,7 @@ module.exports =
 	{
 		try
 		{
-			await Brain_Users.remove_User_LastResponse(brain.Users, message.author.username);
+			await Brain_Users.remove_Single_User(brain.Users, message, message.author.username);
 			message.channel.send(`(new session started with ${message.author.username})`);
 		}
 		catch (error)

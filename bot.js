@@ -11,7 +11,6 @@ var Brain_Words = require('./brain/brain_words.js');
 var Brain_PreWords = require('./brain/brain_pre_words.js');
 var Brain_ProWords = require('./brain/brain_pro_words.js');
 var Brain_Users = require('./brain/brain_users.js');
-var Brain_Topics = require('./brain/brain_topics.js');
 var Util = require('./brain/util.js');
 var Brain_Words_Blacklist = require('./brain/brain_words_blacklist.js');
 
@@ -181,13 +180,6 @@ client.on('message', async message =>
                     //Format input to store as output and last response for the user
                     var clean_message = Util.RulesCheck(message, real_message.trim());
 
-                    //Add outputs if there was a last_response stored for the user
-                    var last_response = await Brain_Users.get_User_LastResponse(brain.Users, message.author.id);
-                    if (last_response)
-                    {
-                        await Brain_Outputs.add_Output(brain.Outputs, last_response, clean_message);
-                    }
-
                     //Respond
                     var response = await Respond(message, clean_message, words);
                     if (response)
@@ -220,29 +212,38 @@ async function AddData(message, real_message)
             words.shift();
         }
 
-        //Remove any blacklisted words
+        //Replace any blacklisted words
         for (var i = 0; i < words.length; i++)
         {
             var blacklisted = await Brain_Words_Blacklist.check_Word(brain.WordsBlackList, words[i]);
             if (blacklisted)
             {
                 words.splice(i, 1);
-                real_message = real_message.replace(words[i], "");
+                real_message = real_message.replace(words[i], "[redacted]");
                 i--;
             }
         }
 
         if (words.length > 0)
         {
+            //Add individual words/counts
+            await Brain_Words.add_Words(brain.Words, words);
+
             //Format the message to add as input
             var clean_message = Util.RulesCheck(message, real_message.trim());
             await Brain_Inputs.add_Input(brain.Inputs, clean_message);
 
-            //Add individual words/counts
-            await Brain_Words.add_Words(brain.Words, words);
+            //Add output if there was a last_response stored for the user
+            var last_response = await Brain_Users.get_User_LastResponse(brain.Users, message.author.id);
+            //message.channel.send(`Found last response: "${last_response}"`);
+
+            if (last_response)
+            {
+                await Brain_Outputs.add_Output(brain.Outputs, last_response, clean_message);
+            }
 
             //Add pre-words and pro-words
-            await AddPreWords(message, words);
+            await AddPreWords(message, words, clean_message);
             await AddProWords(message, words);
 
             return words;
@@ -256,38 +257,13 @@ async function AddData(message, real_message)
     return null;
 }
 
-async function AddPreWords(message, word_array)
+async function AddPreWords(message, word_array, clean_message)
 {
-    var words = [];
-    var pre_words = [];
-    var distances = [];
-
     try
     {
-        for (var i = 1; i < word_array.length; i++)
+        if (word_array)
         {
-            var count = 1;
-            for (var j = i - 1; j >= 0; j--)
-            {
-                if (word_array[i] &&
-                    word_array[j])
-                {
-                    words.push(word_array[i]);
-                    pre_words.push(word_array[j]);
-                    distances.push(count);
-                    count++;
-                }
-            }
-        }
-    
-        if (words)
-        {
-            await Brain_PreWords.add_Pre_Words(message, brain.PreWords, words, pre_words, distances);
-
-            for (var i = 0; i < words.length; i++)
-            {
-                await Brain_PreWords.discourage_PreWords(brain.Words, brain.PreWords, words[i], pre_words[i]);
-            }
+            await Brain_PreWords.add_Pre_Words(message, brain.Outputs, brain.PreWords, word_array, clean_message);
         }
     }
     catch (error)
@@ -323,11 +299,6 @@ async function AddProWords(message, word_array)
         if (words)
         {
             await Brain_ProWords.add_Pro_Words(message, brain.ProWords, words, pro_words, distances);
-
-            for (var i = 0; i < words.length; i++)
-            {
-                await Brain_ProWords.discourage_ProWords(brain.Words, brain.ProWords, words[i], pro_words[i]);
-            }
         }
     }
     catch (error)
@@ -340,86 +311,11 @@ async function Respond(message, input, words)
 {
     try
     {
-        //Get the topic based on which word has the lowest count
-        var topic = await Brain_Words.get_Word_Min(brain.Words, message, words);
-        if (topic)
+        //Generate a new response
+        var generated = await GenerateResponse(message, input, words);
+        if (generated)
         {
-            //Add topic for this input
-            await Brain_Topics.add_Topic(brain.Topics, input, topic);
-
-            var output_pool = [];
-
-            //Get inputs with a matching topic
-            var inputs = await Brain_Topics.get_Inputs_With_Topic(brain.Topics, topic);
-            if (inputs.length > 0)
-            {
-                for (var i = 0; i < inputs.length; i++)
-                {
-                    //Get the outputs for each input
-                    var output = await Brain_Outputs.get_Outputs_Max(brain.Outputs, inputs[i]);
-                    if (output)
-                    {
-                        //Add to possible outputs
-                        output_pool.push(output);
-                    }
-                }
-            }
-
-            var response = "";
-
-            if (output_pool.length > 0)
-            {
-                //Pick topic based output at random
-                var random = Math.floor(Math.random() * output_pool.length);
-                response = output_pool[random];
-            }
-
-            //Get direct outputs for the input
-            if (!response)
-            {
-                var direct_output = await Brain_Outputs.get_Outputs_Max(brain.Outputs, input);
-                if (direct_output)
-                {
-                    response = direct_output;
-                }
-            }
-            
-            //Generate a new response
-            if (!response)
-            {
-                var generated = await GenerateResponse(message, topic);
-                if (generated)
-                {
-                    response = generated;
-                }
-            }
-
-            if (response)
-            {
-                var current_ending = response[response.length - 1];
-                var new_ending = await Util.LearnEndingPunctuation(Brain_Inputs, brain.Inputs, message, response);
-                if (new_ending &&
-                    new_ending != current_ending)
-                {
-                    //Remove all special characters at the end
-                    var specials = Util.EndingPunctuation();
-                    if (specials.includes(response[response.length - 1]))
-                    {
-                        response = response.substring(0, response.length - 1);
-                    }
-
-                    specials = Util.SpecialCharacters();
-                    if (specials.includes(response[response.length - 1]))
-                    {
-                        response = response.substring(0, response.length - 1);
-                    }
-
-                    //Add learned ending puncutation
-                    response += new_ending;
-                }
-            }
-            
-            return response;
+            return generated;
         }
     }
     catch (error)
@@ -427,89 +323,48 @@ async function Respond(message, input, words)
         console.error(error);
     }
 
-    return null;
+    return "";
 }
 
-async function GenerateResponse(message, topic)
+async function GenerateResponse(message, input, words)
 {
     var words_found = true;
+    var current_word = "";
+    var predicted_word = "";
     var response_words = [];
     var response = "";
+    var count = 0;
 
     try
     {
-        response_words.push(topic);
+        if (count < words.length)
+        {
+            current_word = await Brain_PreWords.get_Word_From_PreWord_Max(message, brain.Outputs, brain.PreWords, input, words[count], count);
+            if (!current_word)
+            {
+                current_word = words[count];
+            }
+
+            response_words.push(current_word);
+            count++;
+        }
 
         while (words_found)
         {
-            var pre_word = await Brain_PreWords.get_Pre_Words_Max(message, brain.PreWords, response_words);
-            if (pre_word)
+            if (count < words.length)
             {
-                if (words_found)
-                {
-                    response_words.unshift(pre_word);
-                }
-
-                //Check for repeating chunk of response
-                var dup_found = false;
-                var dup_startIndex = 0;
-                var dup_wordCount = 0;
-
-                if (response_words.length >= 4)
-                {
-                    for (var length = 4; length <= response_words.length; length += 2)
-                    {
-                        var count = Math.floor(length / 2);
-
-                        for (var i = 0; i <= response_words.length - length; i++)
-                        {
-                            var first_chunk = "";
-                            var second_chunk = "";
-
-                            for (var c = i; c < count + i; c++)
-                            {
-                                first_chunk += response_words[c];
-                                second_chunk += response_words[count + c];
-                            }
-
-                            if (first_chunk == second_chunk)
-                            {
-                                dup_found = true;
-                                dup_startIndex = i;
-                                dup_wordCount = count;
-                                break;
-                            }
-                        }
-
-                        if (dup_found)
-                        {
-                            break;
-                        }
-                    }
-                }
-
-                if (dup_found)
-                {
-                    response_words.splice(dup_startIndex, dup_wordCount);
-                    break;
-                }
+                predicted_word = await Brain_PreWords.get_Word_From_PreWord_Max(message, brain.Outputs, brain.PreWords, input, words[count], count);
+                count++;
             }
             else
             {
-                words_found = false;
+                predicted_word = "";
             }
-        }
-    
-        words_found = true;
-        while (words_found)
-        {
-            var pro_word = await Brain_ProWords.get_Pro_Words_Max(message, brain.ProWords, response_words);
+            
+            var pro_word = await Brain_ProWords.get_Pro_Words_Max(message, brain.ProWords, response_words, current_word, predicted_word);
             if (pro_word)
             {
-                if (words_found)
-                {
-                    response_words.push(pro_word);
-                }
+                response_words.push(pro_word);
 
                 if (Util.EndingPunctuation().includes(pro_word))
                 {

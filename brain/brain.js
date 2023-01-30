@@ -84,35 +84,10 @@ class Brain
             }]
         });
 
-        this.Topics = this.Database.define('topics', 
-        {
-            input:
-            { 
-                type: Sequelize.STRING,
-                allowNull: false,
-            },
-            topic:
-            { 
-                type: Sequelize.STRING,
-                allowNull: false,
-            },
-            frequency:
-            {
-                type: Sequelize.INTEGER,
-                defaultValue: 1,
-                allowNull: false
-            },
-            indexes:
-            [{
-                unique: true,
-                fields: ['input', 'topic']
-            }]
-        });
-
         this.Words = this.Database.define('words', 
         {
             word: 
-            { 
+            {
                 type: Sequelize.STRING,
                 primaryKey: true,
                 allowNull: false
@@ -127,14 +102,20 @@ class Brain
 
         this.PreWords = this.Database.define('pre_words', 
         {
+            id:
+            {
+                type: Sequelize.INTEGER,
+                autoIncrement: true,
+                primaryKey: true
+            },
             word:
             { 
-                type: Sequelize.STRING,
+                type: Sequelize.INTEGER,
                 allowNull: false
             },
             pre_word:
-            { 
-                type: Sequelize.STRING,
+            {
+                type: Sequelize.INTEGER,
                 allowNull: false
             },
             frequency:
@@ -158,13 +139,19 @@ class Brain
 
         this.ProWords = this.Database.define('pro_words', 
         {
+            id:
+            {
+                type: Sequelize.INTEGER,
+                autoIncrement: true,
+                primaryKey: true
+            },
             word:
             { 
                 type: Sequelize.STRING,
                 allowNull: false
             },
             pro_word:
-            { 
+            {
                 type: Sequelize.STRING,
                 allowNull: false
             },
@@ -190,9 +177,10 @@ class Brain
         this.WordsBlackList = this.Database.define('words_blacklist', 
         {
             word:
-            { 
+            {
                 type: Sequelize.STRING,
-                allowNull: false,
+                primaryKey: true,
+                allowNull: false
             }
         });
     }
@@ -203,7 +191,6 @@ class Brain
         this.Inputs.sync();
         this.PreWords.sync();
         this.ProWords.sync();
-        this.Topics.sync();
         this.Outputs.sync();
         this.Users.sync();
         this.WordsBlackList.sync();
@@ -216,7 +203,6 @@ class Brain
             .then(this.PreWords.destroy({ where: {} }))
             .then(this.ProWords.destroy({ where: {} }))
             .then(this.Users.destroy({ where: {} }))
-            .then(this.Topics.destroy({ where: {} }))
             .then(this.Outputs.destroy({ where: {} }))
             .then(this.WordsBlackList.destroy({ where: {} }))
             .then(message.channel.send(`Everything has been removed from the database.`));
@@ -228,7 +214,6 @@ class Brain
             .then(this.Inputs.destroy({ where: { input: { [Sequelize.Op.like]: '%' + existing_word + '%' } } }))
             .then(this.PreWords.destroy({ where: { [Sequelize.Op.or]: [{ pre_word: existing_word }, { word: existing_word }] } }))
             .then(this.ProWords.destroy({ where: { [Sequelize.Op.or]: [{ pro_word: existing_word }, { word: existing_word }] } }))
-            .then(this.Topics.destroy({ where: { [Sequelize.Op.or]: [{ topic: existing_word }, { input: { [Sequelize.Op.like]: '%' + existing_word + '%' } }] } }))
             .then(this.Outputs.destroy({ where: { [Sequelize.Op.or]: [{ output: { [Sequelize.Op.like]: '%' + existing_word + '%' } }, { input: { [Sequelize.Op.like]: '%' + existing_word + '%' } }] } }))
             .then(message.channel.send(`Everything containing "${existing_word}" has been removed from the database.`));
     }
