@@ -14,7 +14,7 @@
     "libsodium-wrappers": "^0.7.6",
     "node-opus": "^0.3.3",
     "opusscript": "0.0.6",
-    "sequelize": "^5.22.5",
+    "sequelize": "^6.28.2",
     "sqlite3": "^4.1.1",
     "uws": "^100.0.1"
   },
