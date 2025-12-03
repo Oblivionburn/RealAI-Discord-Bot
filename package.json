@@ -15,7 +15,7 @@
     "node-opus": "^0.3.3",
     "opusscript": "0.0.6",
     "sequelize": "^6.29.0",
-    "sqlite3": "^4.2.0",
+    "sqlite3": "^5.1.7",
     "uws": "^100.0.1"
   },
   "devDependencies": {},
